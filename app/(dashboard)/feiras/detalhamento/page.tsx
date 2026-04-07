@@ -16,6 +16,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 type DetOption = {
   label: string;
   leftIcon: React.ElementType;
