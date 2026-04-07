@@ -444,21 +444,30 @@ export default function ItemComerciantePage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!token || !feiraId) {
+ useEffect(() => {
+  let isMounted = true;
+
+  if (!token || !feiraId) {
+    if (isMounted) {
       setItens(MOCK_ITENS);
       setLoading(false);
-      return;
     }
-    fetchItensComComerciantes(token, feiraId)
-      .then(setItens)
-      .catch(() => {
-        setErro("Erro ao carregar dados. Exibindo dados de demonstração.");
-        setItens(MOCK_ITENS);
-      })
-      .finally(() => setLoading(false));
-  }, [token, feiraId]);
+    return;
+  }
 
+  async function fetchItensComComerciantes(
+  _token: string,  // Prefixed with _ to indicate intentionally unused
+  _feiraId: string
+): Promise<ItemAgrupado[]> {
+  // Mock temporário
+  await new Promise((res) => setTimeout(res, 400));
+  return MOCK_ITENS;
+}
+
+  return () => {
+    isMounted = false;
+  };
+}, [token, feiraId]);
   function handleLogout() { logout(); router.push("/login"); }
 
   return (
