@@ -20,6 +20,30 @@ import {
 } from "lucide-react";
 
 /* ── Helpers ─────────────────────────────────────────────── */
+const MOCK_FEIRAS: FeiraDTO[] = [
+  {
+    id: "mock-1",
+    dataHora: new Date().toISOString(),
+    status: "ABERTA_PEDIDOS",
+    comerciantes: [],
+    itens: [],
+  },
+  {
+    id: "mock-2",
+    dataHora: new Date(Date.now() + 86400000 * 7).toISOString(),
+    status: "ABERTA_OFERTAS",
+    comerciantes: [],
+    itens: [],
+  },
+  {
+    id: "mock-3",
+    dataHora: new Date(Date.now() - 86400000 * 7).toISOString(),
+    status: "FINALIZADA",
+    comerciantes: [],
+    itens: [],
+  },
+];
+
 function formatarData(dataHora: string): string {
   const date = new Date(dataHora);
   return date.toLocaleDateString("pt-BR", {
@@ -59,7 +83,8 @@ const OPTIONS: ActionOption[] = [
     accent: "#1b6112",
   },
   {
-    label: "Detalhamento",
+    label: "Visualizar",
+    sublabel: "Detalhamento",
     icon: FileText,
     description: "Visualize todos os detalhes da feira",
     accent: "#2d7a1f",
@@ -380,16 +405,22 @@ export default function GerenciarFeiraPage() {
 
   useEffect(() => {
     async function fetchFeiras() {
+      if (!token || token === "mock-token-dev") {
+        setFeiras(MOCK_FEIRAS);
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await listarFeiras(token!);
+        const data = await listarFeiras(token);
         setFeiras(data);
       } catch {
-        setError("Não foi possível carregar as feiras");
+        setFeiras(MOCK_FEIRAS);
+        setError("Não foi possível carregar as feiras da API, usando dados locais.");
       } finally {
         setLoading(false);
       }
     }
-    if (token) fetchFeiras();
+    fetchFeiras();
   }, [token]);
 
   function handleLogout() {
