@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -361,8 +361,8 @@ function ComercianteTable({ item }: { item: ItemAgrupado }) {
   );
 }
 
-/* ── Página principal ────────────────────────────────────── */
-export default function ItemComerciantePage() {
+/* ── Componente Principal ────────────────────────────────────── */
+function ItemComercianteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token, logout } = useAuth();
@@ -378,6 +378,7 @@ export default function ItemComerciantePage() {
   useEffect(() => {
     let isMounted = true;
 
+    // Se não tivermos token ou feiraId, jogamos a atualização pro final da fila com setTimeout
     if (!token || !feiraId) {
       setTimeout(() => {
         if (isMounted) {
@@ -386,7 +387,10 @@ export default function ItemComerciantePage() {
           setLoading(false);
         }
       }, 0);
-      return;
+
+      return () => {
+        isMounted = false;
+      };
     }
 
     const loadData = async () => {
@@ -400,7 +404,7 @@ export default function ItemComerciantePage() {
         }
       } catch (error) {
         if (isMounted) {
-          setErro("Erro ao carregar os dados da feira.");
+          setErro("Erro ao carregar os dados. Verifique sua conexão e tente novamente.");
           setItens([]);
         }
       } finally {
@@ -588,5 +592,20 @@ export default function ItemComerciantePage() {
         <p className="text-[#b8ceba] text-[0.7rem] hidden sm:block">Todos os direitos reservados</p>
       </footer>
     </div>
+  );
+}
+
+// EXPORTAÇÃO PRINCIPAL COM O SUSPENSE
+export default function ItemComerciantePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full flex items-center justify-center bg-[#f6faf4]">
+          <Loader2 className="animate-spin text-[#5bc48b]" size={32} />
+        </div>
+      }
+    >
+      <ItemComercianteContent />
+    </Suspense>
   );
 }
