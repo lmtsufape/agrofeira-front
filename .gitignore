@@ -728,3 +728,8 @@ $RECYCLE.BIN/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Serwist PWA
+public/sw.js
+public/sw.js.map
+public/swe-worker-*
