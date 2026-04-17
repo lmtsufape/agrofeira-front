@@ -1,27 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export interface ComercianteData {
+export interface ItemData {
   name: string;
-  phone: string;
-  description: string;
+  unit: string;
+  price: string;
 }
 
-export interface ComercianteResponse {
+export interface ItemResponse {
   id: string;
   nome: string;
-  telefone: string;
-  descricao: string;
-  itens?: Array<{
-    id: string;
-    nome: string;
-    unidadeMedida: string;
-    precoBase: number;
-  }>;
+  unidadeMedida: string;
+  precoBase: number;
 }
 
-export const cadastrarComercianteService = async (
-  data: ComercianteData,
-): Promise<ComercianteResponse> => {
+export const cadastrarItemService = async (
+  data: ItemData,
+): Promise<ItemResponse> => {
   const token = localStorage.getItem("ecofeira_token");
   if (!token) {
     throw new Error(
@@ -29,7 +23,7 @@ export const cadastrarComercianteService = async (
     );
   }
 
-  const response = await fetch(`${API_URL}/api/comerciantes`, {
+  const response = await fetch(`${API_URL}/api/itens`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,14 +31,14 @@ export const cadastrarComercianteService = async (
     },
     body: JSON.stringify({
       nome: data.name,
-      telefone: data.phone,
-      descricao: data.description,
+      unidadeMedida: data.unit,
+      precoBase: parseFloat(data.price),
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Erro ao cadastrar comerciante: ${error}`);
+    throw new Error(`Erro ao cadastrar item: ${error}`);
   }
 
   return response.json();
