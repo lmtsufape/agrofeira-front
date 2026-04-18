@@ -336,8 +336,8 @@ export default function PagamentosComerciantesPage() {
                 Anterior
               </button>
               <button
-                onClick={() => setCurrentPage(2)}
-                className="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium text-[#1B6112] border transition-all hover:bg-[#F9FAFB]"
+                disabled
+                className="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium text-[#8AAA8D] border transition-all disabled:opacity-50"
                 style={{
                   borderColor: "#DAEEDA",
                   background: "white",

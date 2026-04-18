@@ -17,6 +17,15 @@ export interface ComercianteDTO {
   descricao: string;
 }
 
+export interface RepasseDTO {
+  id: string;
+  comercianteId: string;
+  valor: number;
+  mes: number;
+  ano: number;
+  status: "PENDENTE" | "PAGO";
+}
+
 export interface PagamentoDetalhesDTO {
   comerciante: ComercianteDTO;
   repasse: RepasseDTO;
