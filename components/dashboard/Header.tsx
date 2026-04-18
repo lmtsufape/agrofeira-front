@@ -53,7 +53,15 @@ export default function Header() {
       {/* Conteúdo */}
       <div className="relative h-full flex items-center justify-between px-6">
         {/* Logo */}
-        <div className="flex items-center gap-3 z-10">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="flex items-center gap-3 z-10 transition-opacity hover:opacity-80 cursor-pointer"
+          style={{
+            background: "none",
+            border: "none",
+            padding: "0",
+          }}
+        >
           <div
             className="flex items-center justify-center rounded-xl"
             style={{
@@ -76,7 +84,7 @@ export default function Header() {
           >
             EcoFeira
           </div>
-        </div>
+        </button>
 
         {/* Botão Sair */}
         <button
