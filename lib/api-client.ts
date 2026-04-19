@@ -1,6 +1,8 @@
 import { ApiResponse } from "@/types/api";
+import { redirect } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const TOKEN_COOKIE_NAME = "agrofeira_token";
 
 export class ApiError extends Error {
   public status: number;
@@ -18,6 +20,38 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Recupera o token de forma universal (Server/Client)
+ */
+async function getToken(): Promise<string | undefined> {
+  // Ambiente de Servidor (RSC, Server Actions, Route Handlers)
+  if (typeof window === "undefined") {
+    try {
+      // Import dinâmico para evitar que o bundle do cliente tente carregar next/headers
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      return cookieStore.get(TOKEN_COOKIE_NAME)?.value;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Ambiente de Cliente
+  const name = `${TOKEN_COOKIE_NAME}=`;
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return undefined;
+}
+
 function handleApiError(
   response: Response,
   responseData: ApiResponse<unknown> | Record<string, unknown> | unknown,
@@ -30,8 +64,13 @@ function handleApiError(
     (data.error as string) ||
     `Erro ${response.status}`;
 
-  if (response.status === 401 && globalThis.window !== undefined) {
-    globalThis.window.location.href = "/login";
+  // Redirecionamento 401 polimórfico
+  if (response.status === 401) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    } else {
+      redirect("/login");
+    }
   }
 
   throw new ApiError(
@@ -51,7 +90,7 @@ function handleSuccessResponse<T>(responseData: unknown): T {
     if (!apiResponse.success) {
       throw new ApiError(
         apiResponse.message || "Erro na operação",
-        200, // Status ok, but application level error
+        200,
         apiResponse.errors,
       );
     }
@@ -65,8 +104,7 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const isBrowser = globalThis.window !== undefined;
-  const token = isBrowser ? localStorage.getItem("ecofeira_token") : null;
+  const token = await getToken();
   const headers = new Headers(options.headers);
 
   if (!headers.has("Content-Type")) {

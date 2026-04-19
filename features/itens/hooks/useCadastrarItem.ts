@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { cadastrarItemService } from "../services/cadastrar-itens.service";
+import { itemService } from "@/features/itens/api/itens.service";
+import { CreateItemDTO } from "@/features/itens/api/types";
 
 export function useCadastrarItem() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export function useCadastrarItem() {
     name: "",
     unit: "",
     price: "",
+    categoriaId: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -27,14 +29,25 @@ export function useCadastrarItem() {
     e.preventDefault();
     setErro(null);
 
-    if (!formData.name || !formData.unit || !formData.price) {
+    if (
+      !formData.name ||
+      !formData.unit ||
+      !formData.price ||
+      !formData.categoriaId
+    ) {
       setErro("Todos os campos são obrigatórios!");
       return;
     }
 
     setSubmitting(true);
     try {
-      await cadastrarItemService(formData);
+      const payload: CreateItemDTO = {
+        id: "", // ID será gerado pelo banco, mas exigido pelo DTO atual (deve ser refinado)
+        nome: formData.name,
+        unidadeMedida: formData.unit,
+        categoriaId: formData.categoriaId,
+      };
+      await itemService.create(payload);
       router.push("/dashboard");
     } catch (error) {
       const message =

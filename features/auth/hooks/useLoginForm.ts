@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/features/auth/services/auth.service";
+import { loginUser } from "@/features/auth/api/auth.service";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 export function useLoginForm() {

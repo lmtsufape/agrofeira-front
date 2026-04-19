@@ -2,14 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
-import {
-  listarComerciantes,
-  listarItens,
-  criarFeira,
-  type ComercianteDTO,
-  type ItemDTO,
-} from "../services/cadastrar-feira.service";
+import { feiraService } from "@/features/feiras/api/feiras.service";
+import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
+import { itemService } from "@/features/itens/api/itens.service";
+import { type ComercianteDTO } from "@/features/comerciantes/api/types";
+import { type ItemDTO } from "@/features/itens/api/types";
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function pad(n: number) {
@@ -23,7 +20,6 @@ function defaultDateTime() {
 
 export function useCadastrarFeira() {
   const router = useRouter();
-  const { token } = useAuth();
 
   const [dataFeira, setDataFeira] = useState(defaultDateTime());
   const [loadingData, setLoadingData] = useState(true);
@@ -43,15 +39,14 @@ export function useCadastrarFeira() {
   const [itRightSel, setItRightSel] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!token) return;
-    Promise.all([listarComerciantes(token), listarItens(token)])
+    Promise.all([comercianteService.getAll(), itemService.getAll()])
       .then(([coms, itens]) => {
         setCmRight(coms);
         setItRight(itens);
       })
       .catch(() => setErro("Erro ao carregar dados do servidor"))
       .finally(() => setLoadingData(false));
-  }, [token]);
+  }, []);
 
   const toggleSel = (
     id: string,
@@ -118,7 +113,6 @@ export function useCadastrarFeira() {
   };
 
   async function handleConfirmar() {
-    if (!token) return;
     if (cmRight.length === 0) {
       setErro("Adicione ao menos um comerciante");
       return;
@@ -131,7 +125,7 @@ export function useCadastrarFeira() {
     setErro(null);
     setSubmitting(true);
     try {
-      await criarFeira(token, {
+      await feiraService.create({
         feira: {
           dataHora: new Date(dataFeira).toISOString().replace("Z", ""),
           status: "AGENDADA",

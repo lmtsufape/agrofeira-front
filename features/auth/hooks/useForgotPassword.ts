@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { forgotPassword } from "@/features/auth/services/auth.service";
+import { forgotPassword } from "@/features/auth/api/auth.service";
 
 export function useForgotPassword() {
   const [username, setUsername] = useState("");

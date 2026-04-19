@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, CalendarDays, Star } from "lucide-react";
-import { type FeiraDTO } from "@/features/feiras/services/feiras.service";
+import { type FeiraDTO } from "@/features/feiras/api/types";
 import { formatarData } from "@/utils/formatters";
 
 interface FeiraDropdownProps {

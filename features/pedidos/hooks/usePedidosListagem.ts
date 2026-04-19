@@ -1,67 +1,54 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  listarTodosPedidos,
-  type PedidoDTO,
-} from "@/features/pedidos/services/pedidos.service";
+import { pedidoService } from "@/features/pedidos/api/pedidos.service";
+import { type PedidoDTO } from "@/features/pedidos/api/types";
 
 export function usePedidosListagem(itemsPerPage: number = 5) {
   const router = useRouter();
   const [pedidos, setPedidos] = useState<PedidoDTO[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-
-    const fetchPedidos = async () => {
+    async function fetchPedidos() {
       try {
         setLoading(true);
-        const token = localStorage.getItem("ecofeira_token");
-        if (!token) {
-          router.push("/login");
-          return;
-        }
-
-        const data = await listarTodosPedidos(token);
+        const data = await pedidoService.listar();
         setPedidos(data);
-        setErro(null);
       } catch (error) {
-        void error;
-        setErro("Erro ao carregar pedidos. Tente novamente.");
+        setErro("Erro ao carregar lista de pedidos");
+        console.error(error);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchPedidos();
-  }, [isMounted, router]);
+  }, []);
 
-  const pedidosFiltrados = useMemo(() => {
-    if (!searchTerm.trim()) return pedidos;
-    const term = searchTerm.toLowerCase();
+  const filteredPedidos = useMemo(() => {
     return pedidos.filter(
       (p) =>
-        p.clienteNome.toLowerCase().includes(term) ||
-        p.id.toLowerCase().includes(term),
+        p.clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.id.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [pedidos, searchTerm]);
 
-  const totalPages = Math.ceil(pedidosFiltrados.length / itemsPerPage);
+  const totalCount = filteredPedidos.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedPedidos = pedidosFiltrados.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+
+  const currentPedidos = useMemo(() => {
+    return filteredPedidos.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredPedidos, startIndex, itemsPerPage]);
+
+  const handleRowClick = (id: string) => {
+    router.push(`/pedidos/${id}`);
+  };
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -69,15 +56,16 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
   };
 
   return {
-    pedidos: paginatedPedidos,
-    totalCount: pedidosFiltrados.length,
+    pedidos: currentPedidos,
+    loading,
+    erro,
     searchTerm,
     handleSearch,
     currentPage,
     setCurrentPage,
     totalPages,
+    totalCount,
     startIndex,
-    loading,
-    erro,
+    handleRowClick,
   };
 }

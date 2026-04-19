@@ -1,7 +1,7 @@
 "use client";
 
 import { Package } from "lucide-react";
-import { type ItemPedidoDTO } from "@/features/pedidos/services/pedidos.service";
+import { type ItemPedidoDTO } from "@/features/pedidos/api/types";
 import { formatarMoeda } from "@/utils/formatters";
 
 interface PedidoItensTableProps {

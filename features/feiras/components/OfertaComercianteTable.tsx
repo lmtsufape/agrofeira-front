@@ -1,7 +1,7 @@
 "use client";
 
 import { Users, Hash, DollarSign, Receipt, Store } from "lucide-react";
-import { type ItemAgrupado } from "@/features/feiras/services/feiras.service";
+import { type ItemAgrupado } from "@/features/feiras/api/types";
 import { formatarMoeda } from "@/utils/formatters";
 import { DataTableList } from "@/components/ui/DataTableList";
 import {

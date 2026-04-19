@@ -2,6 +2,9 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo } from "react";
 
+const TOKEN_KEY = "agrofeira_token";
+const USERNAME_KEY = "agrofeira_username";
+
 interface AuthContextType {
   token: string | null;
   username: string | null;
@@ -13,31 +16,47 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/**
+ * Helpers de Cookies no Cliente
+ */
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift() ?? null;
+  return null;
+}
+
+function setCookie(name: string, value: string, days = 7) {
+  if (typeof document === "undefined") return;
+  const date = new Date();
+  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+  const expires = `; expires=${date.toUTCString()}`;
+  document.cookie = `${name}=${value || ""}${expires}; path=/; SameSite=Lax`;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+}
+
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [token, setToken] = useState<string | null>(() => {
-    if (globalThis.window !== undefined) {
-      return localStorage.getItem("ecofeira_token");
-    }
-    return null;
-  });
-  const [username, setUsername] = useState<string | null>(() => {
-    if (globalThis.window !== undefined) {
-      return localStorage.getItem("ecofeira_username");
-    }
-    return null;
-  });
-  const [isInitialized] = useState(globalThis.window !== undefined);
+  const [token, setToken] = useState<string | null>(() => getCookie(TOKEN_KEY));
+  const [username, setUsername] = useState<string | null>(() =>
+    getCookie(USERNAME_KEY),
+  );
+  const [isInitialized] = useState(true);
 
   function login(token: string, username: string) {
-    localStorage.setItem("ecofeira_token", token);
-    localStorage.setItem("ecofeira_username", username);
+    setCookie(TOKEN_KEY, token);
+    setCookie(USERNAME_KEY, username);
     setToken(token);
     setUsername(username);
   }
 
   function logout() {
-    localStorage.removeItem("ecofeira_token");
-    localStorage.removeItem("ecofeira_username");
+    deleteCookie(TOKEN_KEY);
+    deleteCookie(USERNAME_KEY);
     setToken(null);
     setUsername(null);
   }

@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import {
-  fetchItensComComerciantes,
-  type ItemAgrupado,
-} from "@/features/feiras/services/feiras.service";
+import { feiraService } from "@/features/feiras/api/feiras.service";
+import { type ItemAgrupado } from "@/features/feiras/api/types";
 import { useFetchFeiraData } from "./useFetchFeiraData";
 
 export function useDetalhamentoItem(
@@ -12,7 +10,7 @@ export function useDetalhamentoItem(
   feiraId: string | null,
 ) {
   const fetchFn = useCallback(
-    (t: string, id: string) => fetchItensComComerciantes(t, id),
+    (id: string) => feiraService.getItensAgrupados(id),
     [],
   );
 

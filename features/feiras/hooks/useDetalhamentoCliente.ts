@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 import {
-  listarPedidosPorFeira,
   type PedidoDTO,
   type ItemPedidoDTO,
-} from "@/features/pedidos/services/pedidos.service";
+} from "@/features/pedidos/api/types";
 
 export interface ClienteAgrupado {
   clienteId: string;
@@ -133,7 +133,7 @@ export function useDetalhamentoCliente(
 
       try {
         setLoading(true);
-        const data = await listarPedidosPorFeira(token!, feiraId!);
+        const data = await pedidoService.listarPorFeira(feiraId!);
         if (data.length > 0) {
           setPedidos(data);
         } else {

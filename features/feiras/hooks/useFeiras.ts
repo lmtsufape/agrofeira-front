@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import {
-  listarFeiras,
-  type FeiraDTO,
-} from "@/features/feiras/services/feiras.service";
+import { feiraService } from "@/features/feiras/api/feiras.service";
+import { type FeiraDTO } from "@/features/feiras/api/types";
 
 const MOCK_FEIRAS: FeiraDTO[] = [
   {
@@ -46,7 +44,7 @@ export function useFeiras() {
         return;
       }
       try {
-        const data = await listarFeiras(token);
+        const data = await feiraService.getAll();
         setFeiras(data);
       } catch {
         setFeiras(MOCK_FEIRAS);

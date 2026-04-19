@@ -1,7 +1,7 @@
 "use client";
 
 import { Package } from "lucide-react";
-import { type ItemAgrupado } from "@/features/feiras/services/feiras.service";
+import { type ItemAgrupado } from "@/features/feiras/api/types";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 interface ItemDropdownProps {

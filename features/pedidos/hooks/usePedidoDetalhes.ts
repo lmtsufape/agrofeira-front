@@ -2,51 +2,42 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  buscarPedidoPorId,
-  type PedidoDTO,
-} from "@/features/pedidos/services/pedidos.service";
+import { pedidoService } from "@/features/pedidos/api/pedidos.service";
+import { type PedidoDTO } from "@/features/pedidos/api/types";
 
 export function usePedidoDetalhes(pedidoId: string) {
   const router = useRouter();
   const [pedido, setPedido] = useState<PedidoDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!pedidoId) return;
 
-  useEffect(() => {
-    if (!isMounted || !pedidoId) return;
-
-    const fetchPedido = async () => {
+    async function fetchPedido() {
       try {
         setLoading(true);
-        const token = localStorage.getItem("ecofeira_token");
-        if (!token) {
-          router.push("/login");
-          return;
-        }
-
-        const data = await buscarPedidoPorId(token, pedidoId);
+        const data = await pedidoService.buscarPorId(pedidoId);
         setPedido(data);
-        setErro(null);
       } catch (error) {
-        void error;
-        setErro("Erro ao carregar detalhes do pedido.");
+        setErro("Erro ao carregar detalhes do pedido");
+        console.error(error);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchPedido();
-  }, [isMounted, pedidoId, router]);
+  }, [pedidoId]);
 
-  const handlePrint = () => {
-    globalThis.window.print();
+  const handleVoltar = () => router.push("/pedidos");
+  const handlePrint = () => window.print();
+
+  return {
+    pedido,
+    loading,
+    erro,
+    handleVoltar,
+    handlePrint,
   };
-
-  return { pedido, loading, erro, handlePrint };
 }

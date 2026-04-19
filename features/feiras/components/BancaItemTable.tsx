@@ -1,7 +1,7 @@
 "use client";
 
 import { Package, Hash, DollarSign, Receipt } from "lucide-react";
-import { type EstoqueBancaDTO } from "@/features/feiras/services/feiras.service";
+import { type EstoqueBancaDTO } from "@/features/feiras/api/types";
 import { formatarMoeda } from "@/utils/formatters";
 import { DataTableList } from "@/components/ui/DataTableList";
 import {

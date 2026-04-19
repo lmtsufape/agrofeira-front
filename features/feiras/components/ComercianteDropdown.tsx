@@ -1,7 +1,7 @@
 "use client";
 
 import { Store } from "lucide-react";
-import { type EstoqueBancaDTO } from "@/features/feiras/services/feiras.service";
+import { type EstoqueBancaDTO } from "@/features/feiras/api/types";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 interface ComercianteDropdownProps {

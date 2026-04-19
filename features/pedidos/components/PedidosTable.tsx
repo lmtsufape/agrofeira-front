@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Eye } from "lucide-react";
-import { type PedidoDTO } from "@/features/pedidos/services/pedidos.service";
+import { type PedidoDTO } from "@/features/pedidos/api/types";
 import { formatarData, formatarHora, formatarMoeda } from "@/utils/formatters";
 import { getStatusColor } from "@/utils/status";
 

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  buscarResumoFeira,
-  type ResumoFeiraDTO,
-} from "@/features/feiras/services/feiras.service";
+import { feiraService } from "@/features/feiras/api/feiras.service";
+import { type ResumoFeiraDTO } from "@/features/feiras/api/types";
 
 const MOCK_RESUMO: ResumoFeiraDTO = {
   feiraId: "f-1",
@@ -45,7 +43,7 @@ export function useVisaoGeralFeira(
 
       try {
         setLoading(true);
-        const data = await buscarResumoFeira(token!, feiraId!);
+        const data = await feiraService.getResumo(feiraId!);
         setResumo(data);
         setErro(null);
       } catch {

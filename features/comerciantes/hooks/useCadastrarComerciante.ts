@@ -1,6 +1,6 @@
 "use client";
 
-import { cadastrarComercianteService } from "../services/cadastrar-comerciantes.service";
+import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
 import { useFormSubmit } from "@/hooks/useFormSubmit";
 
 export function useCadastrarComerciante() {
@@ -15,16 +15,21 @@ export function useCadastrarComerciante() {
     initialValues: {
       name: "",
       phone: "",
+      email: "",
       description: "",
     },
     validate: (data) => {
-      if (!data.name || !data.phone) {
-        return "Nome e Telefone são obrigatórios!";
+      if (!data.name || !data.phone || !data.email) {
+        return "Nome, Telefone e Email são obrigatórios!";
       }
       return null;
     },
     onSubmit: async (data) => {
-      await cadastrarComercianteService(data);
+      await comercianteService.create({
+        nome: data.name,
+        telefone: data.phone,
+        email: data.email,
+      });
     },
     errorMessageFallback: "Erro ao cadastrar comerciante",
   });

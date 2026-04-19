@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 export function useFetchFeiraData<T>(
   token: string | null,
   feiraId: string | null,
-  fetchFn: (token: string, feiraId: string) => Promise<T[]>,
+  fetchFn: (feiraId: string) => Promise<T[]>,
   errorMessage: string = "Erro ao carregar os dados. Tente novamente.",
 ) {
   const [data, setData] = useState<T[]>([]);
@@ -24,7 +24,7 @@ export function useFetchFeiraData<T>(
     async function loadData() {
       try {
         setLoading(true);
-        const fetchedData = await fetchFn(token!, feiraId!);
+        const fetchedData = await fetchFn(feiraId!);
         if (isMounted) {
           setData(fetchedData);
           setErro(null);
