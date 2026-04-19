@@ -1,5 +1,5 @@
-import Header from "@/components/dashboard/Header";
-import Footer from "@/components/dashboard/Footer";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export default function DashboardLayout({
   children,
@@ -7,12 +7,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      className="flex min-h-screen flex-col"
-      style={{
-        background: "linear-gradient(160deg, #f6faf4 0%, #edf5eb 100%)",
-      }}
-    >
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(160deg,#f6faf4_0%,#edf5eb_100%)]">
       <Header />
       <main className="flex-grow pt-20">{children}</main>
       <Footer />
