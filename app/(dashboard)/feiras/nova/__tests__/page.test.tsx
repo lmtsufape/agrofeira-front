@@ -133,6 +133,42 @@ describe("CadastrarFeiraPage - Deep Unit Test", () => {
     expect(itemLabels[1].textContent).toBe("Item 2 (UN)");
   });
 
+  it("deve atualizar a data quando o input for alterado", () => {
+    render(<CadastrarFeiraPage />);
+    const input = screen.getByLabelText(/Data e Horário/i);
+
+    fireEvent.change(input, { target: { value: "2026-05-20T10:00" } });
+    expect(mockSetDataFeira).toHaveBeenCalledWith("2026-05-20T10:00");
+  });
+
+  it("deve navegar para o dashboard ao clicar em cancelar", () => {
+    render(<CadastrarFeiraPage />);
+    const cancelBtn = screen.getByRole("button", { name: /Cancelar/i });
+
+    fireEvent.click(cancelBtn);
+    expect(mockPush).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("deve chamar handleConfirmar ao clicar em confirmar", () => {
+    render(<CadastrarFeiraPage />);
+    const confirmBtn = screen.getByRole("button", { name: /Confirmar/i });
+
+    fireEvent.click(confirmBtn);
+    expect(mockHandleConfirmar).toHaveBeenCalled();
+  });
+
+  it("deve passar o estado loadingData para as TransferLists", () => {
+    (useCadastrarFeira as Mock).mockReturnValue({
+      ...baseHookValue,
+      loadingData: true,
+    });
+
+    render(<CadastrarFeiraPage />);
+    const loadingIndicators = screen.getAllByTestId("loading");
+    expect(loadingIndicators.length).toBeGreaterThan(0);
+    expect(loadingIndicators[0].textContent).toBe("Carregando...");
+  });
+
   it("deve disparar toggleSel corretamente para Comerciantes", () => {
     render(<CadastrarFeiraPage />);
 
@@ -196,7 +232,7 @@ describe("CadastrarFeiraPage - Deep Unit Test", () => {
     expect(confirmBtn).toBeInTheDocument();
   });
 
-  it("deve lidar com erros de borda: listas nulas do hook", () => {
+  it("deve lidar com erros de borda: listas nulas ou vazias do hook", () => {
     (useCadastrarFeira as Mock).mockReturnValue({
       ...baseHookValue,
       comerciantes: { ...mockComerciantes, left: [], right: [] },
@@ -207,15 +243,21 @@ describe("CadastrarFeiraPage - Deep Unit Test", () => {
     expect(screen.getByTestId("count-Comerciantes Elegíveis").textContent).toBe(
       "0",
     );
+    expect(
+      screen.queryByTestId("item-label-Comerciantes Elegíveis"),
+    ).not.toBeInTheDocument();
   });
 
-  it("deve verificar a formatação de data no preview", () => {
+  it("deve verificar a formatação de data no preview e não mostrar se vazio", () => {
+    const { rerender } = render(<CadastrarFeiraPage />);
+    expect(screen.queryByText("Agendado para")).not.toBeInTheDocument();
+
     (useCadastrarFeira as Mock).mockReturnValue({
       ...baseHookValue,
       dataFeira: "2026-12-31T23:59",
     });
 
-    render(<CadastrarFeiraPage />);
+    rerender(<CadastrarFeiraPage />);
     expect(screen.getByText("31 de dezembro de 2026")).toBeInTheDocument();
     expect(screen.getByText("23:59")).toBeInTheDocument();
   });
@@ -229,5 +271,11 @@ describe("CadastrarFeiraPage - Deep Unit Test", () => {
     render(<CadastrarFeiraPage />);
     const alert = screen.getByText("Falha Crítica");
     expect(alert.closest(".animate-shake")).toBeInTheDocument();
+  });
+
+  it("deve garantir que o PageHeader receba as props corretas", () => {
+    render(<CadastrarFeiraPage />);
+    expect(screen.getByText("Cadastrar Feira")).toBeInTheDocument();
+    expect(screen.getByText(/Preencha as informações/i)).toBeInTheDocument();
   });
 });
