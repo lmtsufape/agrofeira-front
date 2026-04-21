@@ -18,7 +18,8 @@ function DetalhamentoVisaoGeralContent() {
 
   const handleDetailClick = (
     type: "item" | "comerciante" | "cliente",
-    id: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: string,
   ) => {
     const query = feiraId ? `?feiraId=${feiraId}` : "";
     const routes: Record<string, string> = {

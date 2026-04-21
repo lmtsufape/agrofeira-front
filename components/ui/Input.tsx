@@ -1,6 +1,6 @@
 "use client";
 
-import { InputHTMLAttributes, forwardRef } from "react";
+import { InputHTMLAttributes, forwardRef, useId } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,11 +10,17 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, icon, rightElement, className = "", ...props }, ref) => {
+  ({ label, error, icon, rightElement, className = "", id, ...props }, ref) => {
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
+
     return (
       <div className="flex flex-col gap-1.5 w-full">
         {label && (
-          <label className="text-sm font-semibold text-[#1a4731]">
+          <label
+            htmlFor={inputId}
+            className="text-sm font-semibold text-[#1a4731]"
+          >
             {label}
           </label>
         )}
@@ -25,6 +31,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
           <input
+            id={inputId}
             ref={ref}
             className={`w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm outline-none focus:border-[#1a4731] focus:ring-2 focus:ring-[#1a4731]/10 transition disabled:opacity-70 disabled:cursor-not-allowed ${
               icon ? "pl-10" : "pl-4"

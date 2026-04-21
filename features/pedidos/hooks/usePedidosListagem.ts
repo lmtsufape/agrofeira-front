@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 import { type PedidoDTO } from "@/features/pedidos/api/types";
