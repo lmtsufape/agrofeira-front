@@ -10,7 +10,6 @@ import {
 
 export default function ComerciantesPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [comerciantes, setComerciantes] = useState<ComercianteDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

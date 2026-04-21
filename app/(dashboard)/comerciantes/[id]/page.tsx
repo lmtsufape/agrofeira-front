@@ -78,16 +78,6 @@ export default function ComercianteDetailsPage() {
     activeCategories.includes(cat.id),
   );
 
-  const handleAddCategory = (categoryId: string) => {
-    setActiveCategories([...activeCategories, categoryId]);
-    setSelectedInactive(selectedInactive.filter((id) => id !== categoryId));
-  };
-
-  const handleRemoveCategory = (categoryId: string) => {
-    setActiveCategories(activeCategories.filter((id) => id !== categoryId));
-    setSelectedActive(selectedActive.filter((id) => id !== categoryId));
-  };
-
   const handleAddSelected = () => {
     setActiveCategories([...activeCategories, ...selectedInactive]);
     setSelectedInactive([]);

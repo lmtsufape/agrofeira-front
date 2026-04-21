@@ -78,6 +78,7 @@ const OPTIONS: ActionOption[] = [
     icon: ShoppingCart,
     description: "Registre novos pedidos da feira",
     accent: "#1b6112",
+    href: "/pedidos/cadastrar",
   },
   {
     label: "Visualizar",
