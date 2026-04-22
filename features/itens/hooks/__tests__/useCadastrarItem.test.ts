@@ -58,10 +58,10 @@ describe("useCadastrarItem", () => {
     });
 
     expect(itemService.create).toHaveBeenCalledWith({
-      id: "",
       nome: "Tomate",
       unidadeMedida: "kg",
       categoriaId: "cat-1",
+      valor: "5.50",
     });
     expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });
