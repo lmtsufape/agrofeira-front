@@ -28,35 +28,52 @@ export function useVisaoGeralFeira(
   feiraId: string | null,
 ) {
   const [resumo, setResumo] = useState<ResumoFeiraDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!(token && feiraId));
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token || !feiraId) return;
+    let isMounted = true;
 
     async function loadData() {
+      if (!token || !feiraId) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       if (token === "mock-token-dev") {
-        setResumo(MOCK_RESUMO);
-        setLoading(false);
+        if (isMounted) {
+          setResumo(MOCK_RESUMO);
+          setLoading(false);
+        }
         return;
       }
 
       try {
         setLoading(true);
-        const data = await feiraService.getResumo(feiraId!);
-        setResumo(data);
-        setErro(null);
+        const data = await feiraService.getResumo(feiraId);
+        if (isMounted) {
+          setResumo(data);
+          setErro(null);
+        }
       } catch {
-        setErro(
-          "Não foi possível carregar o resumo da feira. Usando dados locais.",
-        );
-        setResumo(MOCK_RESUMO);
+        if (isMounted) {
+          setErro(
+            "Não foi possível carregar o resumo da feira. Usando dados locais.",
+          );
+          setResumo(MOCK_RESUMO);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token, feiraId]);
 
   return { resumo, loading, erro };

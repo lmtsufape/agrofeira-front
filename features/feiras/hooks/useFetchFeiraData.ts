@@ -9,22 +9,22 @@ export function useFetchFeiraData<T>(
   errorMessage: string = "Erro ao carregar os dados. Tente novamente.",
 ) {
   const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!(token && feiraId));
   const [erro, setErro] = useState<string | null>(null);
   const [selected, setSelected] = useState<T | null>(null);
 
   useEffect(() => {
-    if (!token || !feiraId) {
-      setLoading(false);
-      return;
-    }
-
     let isMounted = true;
 
     async function loadData() {
+      if (!token || !feiraId) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const fetchedData = await fetchFn(feiraId!);
+        const fetchedData = await fetchFn(feiraId);
         if (isMounted) {
           setData(fetchedData);
           setErro(null);

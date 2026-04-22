@@ -107,7 +107,7 @@ export function useDetalhamentoCliente(
   feiraId: string | null,
 ) {
   const [pedidos, setPedidos] = useState<PedidoDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!(token && feiraId));
   const [erro, setErro] = useState<string | null>(null);
   const [selected, setSelected] = useState<ClienteAgrupado | null>(null);
 
@@ -122,34 +122,51 @@ export function useDetalhamentoCliente(
   );
 
   useEffect(() => {
-    if (!token || !feiraId) return;
+    let isMounted = true;
 
     async function fetchPedidos() {
+      if (!token || !feiraId) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       if (token === "mock-token-dev") {
-        setPedidos(MOCK_PEDIDOS);
-        setLoading(false);
+        if (isMounted) {
+          setPedidos(MOCK_PEDIDOS);
+          setLoading(false);
+        }
         return;
       }
 
       try {
         setLoading(true);
-        const data = await pedidoService.listarPorFeira(feiraId!);
-        if (data.length > 0) {
-          setPedidos(data);
-        } else {
-          setPedidos([]);
+        const data = await pedidoService.listarPorFeira(feiraId);
+        if (isMounted) {
+          if (data.length > 0) {
+            setPedidos(data);
+          } else {
+            setPedidos([]);
+          }
         }
       } catch {
-        setErro(
-          "Não foi possível carregar pedidos da API, usando dados locais.",
-        );
-        setPedidos(MOCK_PEDIDOS);
+        if (isMounted) {
+          setErro(
+            "Não foi possível carregar pedidos da API, usando dados locais.",
+          );
+          setPedidos(MOCK_PEDIDOS);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchPedidos();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token, feiraId]);
 
   return {
