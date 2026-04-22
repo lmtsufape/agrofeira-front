@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronRight, Users } from "lucide-react";
 import { listarClientes } from "@/services/clientes.service";
@@ -54,15 +54,19 @@ const MOCK_PARTICIPANTES: Participante[] = [
 
 export default function CadastrarPedidoPage() {
   const [participantes, setParticipantes] = useState<Participante[]>([]);
-  const [filteredParticipantes, setFilteredParticipantes] = useState<
-    Participante[]
-  >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedParticipante, setSelectedParticipante] =
     useState<Participante | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Calcular participantes filtrados durante a renderização
+  const filteredParticipantes = useMemo(() => {
+    return participantes.filter((p) =>
+      p.nome.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [searchTerm, participantes]);
 
   // Carregar participantes
   useEffect(() => {
@@ -90,12 +94,10 @@ export default function CadastrarPedidoPage() {
         ];
 
         setParticipantes(participantesData);
-        setFilteredParticipantes(participantesData);
         setError(null);
       } catch {
         // Usar dados mock como fallback
         setParticipantes(MOCK_PARTICIPANTES);
-        setFilteredParticipantes(MOCK_PARTICIPANTES);
         setError(null);
       } finally {
         setLoading(false);
@@ -104,13 +106,6 @@ export default function CadastrarPedidoPage() {
 
     fetchParticipantes();
   }, []);
-
-  useEffect(() => {
-    const filtered = participantes.filter((p) =>
-      p.nome.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-    setFilteredParticipantes(filtered);
-  }, [searchTerm, participantes]);
 
   const handleProximo = () => {
     if (selectedParticipante) {
