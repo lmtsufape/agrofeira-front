@@ -353,10 +353,14 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
 
                 {/* Campo Nome */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide">
+                  <label
+                    htmlFor="edit-nome"
+                    className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide"
+                  >
                     Nome <span className="text-red-400">*</span>
                   </label>
                   <input
+                    id="edit-nome"
                     type="text"
                     value={formData.nome}
                     onChange={(e) => handleFormChange("nome", e.target.value)}
@@ -367,10 +371,14 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
 
                 {/* Campo Telefone */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide">
+                  <label
+                    htmlFor="edit-telefone"
+                    className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide"
+                  >
                     Telefone <span className="text-red-400">*</span>
                   </label>
                   <input
+                    id="edit-telefone"
                     type="tel"
                     value={formData.telefone}
                     onChange={(e) =>
@@ -383,10 +391,14 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
 
                 {/* Campo Descrição */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide">
+                  <label
+                    htmlFor="edit-descricao"
+                    className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide"
+                  >
                     Descrição
                   </label>
                   <textarea
+                    id="edit-descricao"
                     value={formData.descricao}
                     onChange={(e) =>
                       handleFormChange("descricao", e.target.value)

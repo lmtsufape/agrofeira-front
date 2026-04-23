@@ -96,10 +96,14 @@ export function ClienteEdit({ clienteId }: ClienteEditProps) {
           <div className="space-y-4">
             {/* Nome Completo */}
             <div>
-              <label className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2">
+              <label
+                htmlFor="nome"
+                className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2"
+              >
                 Nome Completo
               </label>
               <input
+                id="nome"
                 type="text"
                 value={formData.nome}
                 onChange={(e) => handleFormChange("nome", e.target.value)}
@@ -110,10 +114,14 @@ export function ClienteEdit({ clienteId }: ClienteEditProps) {
 
             {/* Telefone */}
             <div>
-              <label className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2">
+              <label
+                htmlFor="telefone"
+                className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2"
+              >
                 Telefone
               </label>
               <input
+                id="telefone"
                 type="tel"
                 value={formData.telefone}
                 onChange={(e) => handleFormChange("telefone", e.target.value)}
@@ -124,10 +132,14 @@ export function ClienteEdit({ clienteId }: ClienteEditProps) {
 
             {/* Descrição */}
             <div>
-              <label className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2">
+              <label
+                htmlFor="descricao"
+                className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2"
+              >
                 Descrição / Observações
               </label>
               <textarea
+                id="descricao"
                 value={formData.descricao}
                 onChange={(e) => handleFormChange("descricao", e.target.value)}
                 placeholder="Adicione uma nota sobre o cliente (opcional)"
