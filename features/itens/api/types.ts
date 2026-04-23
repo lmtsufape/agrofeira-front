@@ -1,9 +1,10 @@
 export interface ItemDTO {
   id: string;
   nome: string;
-  descricao?: string;
-  categoriaId: string;
+  valor: string;
   unidadeMedida: string;
+  categoriaId?: string;
+  dataCadastro?: string;
 }
 
-export type CreateItemDTO = ItemDTO;
+export type CreateItemDTO = Omit<ItemDTO, "id">;
