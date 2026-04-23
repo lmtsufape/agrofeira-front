@@ -14,20 +14,32 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchPedidos() {
       try {
         setLoading(true);
         const data = await pedidoService.listar();
-        setPedidos(data);
+        if (isMounted) {
+          setPedidos(data);
+        }
       } catch (error) {
-        setErro("Erro ao carregar lista de pedidos");
-        console.error(error);
+        if (isMounted) {
+          setErro("Erro ao carregar lista de pedidos");
+          console.error(error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchPedidos();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredPedidos = useMemo(() => {

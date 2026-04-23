@@ -34,6 +34,7 @@ export function ComercianteForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Nome *"
+              id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
@@ -42,6 +43,7 @@ export function ComercianteForm() {
             />
             <Input
               label="Telefone *"
+              id="phone"
               name="phone"
               type="tel"
               value={formData.phone}
@@ -52,6 +54,7 @@ export function ComercianteForm() {
           </div>
           <Textarea
             label="Descrição"
+            id="description"
             name="description"
             value={formData.description}
             onChange={handleInputChange}

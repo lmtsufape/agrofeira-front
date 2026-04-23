@@ -42,10 +42,10 @@ export function useCadastrarItem() {
     setSubmitting(true);
     try {
       const payload: CreateItemDTO = {
-        id: "", // ID será gerado pelo banco, mas exigido pelo DTO atual (deve ser refinado)
         nome: formData.name,
         unidadeMedida: formData.unit,
         categoriaId: formData.categoriaId,
+        valor: formData.price,
       };
       await itemService.create(payload);
       router.push("/dashboard");

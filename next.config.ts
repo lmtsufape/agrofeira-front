@@ -8,7 +8,9 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {},
+  // allowedDevOrigins: ["192.168.1.1"], // Substitua pelo IP do seu dispositivo
 };
 
 export default withSerwist(nextConfig);

@@ -8,26 +8,41 @@ import { type PedidoDTO } from "@/features/pedidos/api/types";
 export function usePedidoDetalhes(pedidoId: string) {
   const router = useRouter();
   const [pedido, setPedido] = useState<PedidoDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!pedidoId);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pedidoId) return;
+    let isMounted = true;
 
     async function fetchPedido() {
+      if (!pedidoId) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const data = await pedidoService.buscarPorId(pedidoId);
-        setPedido(data);
+        if (isMounted) {
+          setPedido(data);
+        }
       } catch (error) {
-        setErro("Erro ao carregar detalhes do pedido");
-        console.error(error);
+        if (isMounted) {
+          setErro("Erro ao carregar detalhes do pedido");
+          console.error(error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchPedido();
+
+    return () => {
+      isMounted = false;
+    };
   }, [pedidoId]);
 
   const handleVoltar = () => router.push("/pedidos");
