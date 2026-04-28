@@ -25,7 +25,7 @@ describe("Header", () => {
 
   it("deve renderizar o nome da plataforma", () => {
     render(<Header />);
-    expect(screen.getByText("EcoFeira")).toBeInTheDocument();
+    expect(screen.getByText("Agro Feira")).toBeInTheDocument();
   });
 
   it("deve chamar logout e redirecionar ao clicar em sair", () => {
@@ -39,7 +39,7 @@ describe("Header", () => {
 
   it("deve redirecionar para a home ao clicar no logo", () => {
     render(<Header />);
-    const logoButton = screen.getByRole("button", { name: /logo ecofeira/i });
+    const logoButton = screen.getByRole("button", { name: /logo agro feira/i });
     fireEvent.click(logoButton);
 
     expect(mockPush).toHaveBeenCalledWith("/");

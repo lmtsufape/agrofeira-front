@@ -1,118 +1,142 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { ClienteForm } from "../ClienteForm";
-import { useCadastrarCliente } from "../../hooks/useCadastrarCliente";
+import { clienteService } from "../../api/clientes.service";
+import { useRouter } from "next/navigation";
 
-vi.mock("../../hooks/useCadastrarCliente");
+// Mock do service
+vi.mock("../../api/clientes.service", () => ({
+  clienteService: {
+    create: vi.fn(),
+  },
+}));
+
+// Mock do next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(),
+}));
 
 describe("ClienteForm Component", () => {
-  const mockHandleInputChange = vi.fn();
-  const mockHandleSubmit = vi.fn();
-  const mockHandleCancel = vi.fn();
-
-  const baseHookValue = {
-    formData: {
-      name: "",
-      phone: "",
-      email: "",
-      cpf: "",
-      description: "",
-      cep: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-    },
-    handleInputChange: mockHandleInputChange,
-    handleSubmit: mockHandleSubmit,
-    handleCancel: mockHandleCancel,
-    submitting: false,
-    erro: null,
-  };
+  const mockPush = vi.fn();
+  const mockBack = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useCadastrarCliente as Mock).mockReturnValue(baseHookValue);
+    (useRouter as Mock).mockReturnValue({ push: mockPush, back: mockBack });
   });
 
-  it("deve renderizar todas as seções e campos obrigatórios", () => {
+  it("deve renderizar os campos corretamente", () => {
     render(<ClienteForm />);
 
-    expect(screen.getByText("Dados Pessoais")).toBeInTheDocument();
-    expect(screen.getByText("Endereço")).toBeInTheDocument();
-
-    expect(screen.getByLabelText(/Nome \*/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Telefone \*/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("00000-000")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Nome/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Telefone/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
   });
 
-  it("deve chamar handleInputChange ao digitar nos campos", () => {
-    render(<ClienteForm />);
-
-    const nameInput = screen.getByLabelText(/Nome \*/i);
-    fireEvent.change(nameInput, {
-      target: { value: "Maria Oliveira", name: "name" },
-    });
-
-    expect(mockHandleInputChange).toHaveBeenCalled();
-  });
-
-  it("deve exibir mensagem de erro com animação quando presente no hook", () => {
-    (useCadastrarCliente as Mock).mockReturnValue({
-      ...baseHookValue,
-      erro: "Erro ao salvar cliente",
-    });
-
-    render(<ClienteForm />);
-
-    const errorAlert = screen.getByText("Erro ao salvar cliente");
-    expect(errorAlert).toBeInTheDocument();
-    // O erro é renderizado dentro de uma div que possui a classe animate-shake
-    expect(errorAlert.closest(".animate-shake")).toBeInTheDocument();
-  });
-
-  it("deve mostrar estado de carregamento no botão de confirmação", () => {
-    (useCadastrarCliente as Mock).mockReturnValue({
-      ...baseHookValue,
-      submitting: true,
-    });
-
-    render(<ClienteForm />);
-
-    const submitBtn = screen.getByRole("button", { name: /Salvando.../i });
-    expect(submitBtn).toBeInTheDocument();
-    expect(submitBtn).toBeDisabled();
-  });
-
-  it("deve disparar handleCancel ao clicar no botão cancelar", () => {
-    render(<ClienteForm />);
-
-    const cancelBtn = screen.getByRole("button", { name: /Cancelar/i });
-    fireEvent.click(cancelBtn);
-
-    expect(mockHandleCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it("deve disparar handleSubmit ao submeter o formulário", () => {
-    render(<ClienteForm />);
-
-    const form = screen
-      .getByRole("button", { name: /Confirmar/i })
-      .closest("form");
-    if (!form) throw new Error("Form não encontrado");
+  it("deve validar que o nome é obrigatório", async () => {
+    const { container } = render(<ClienteForm />);
+    const form = container.querySelector("form");
+    if (!form) throw new Error("Form not found");
 
     fireEvent.submit(form);
-    expect(mockHandleSubmit).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(screen.getByText("O nome é obrigatório!")).toBeInTheDocument();
+    });
+
+    expect(clienteService.create).not.toHaveBeenCalled();
   });
 
-  it("deve renderizar o select de estados com as opções corretas", () => {
+  it("deve enviar o formulário com dados mínimos e gerar senha aleatória", async () => {
+    const mockCreate = clienteService.create as Mock;
+    mockCreate.mockResolvedValue({});
+
     render(<ClienteForm />);
 
-    const stateSelect = screen.getByLabelText(/Estado/i);
-    expect(stateSelect).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "PE" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "SP" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Nome/i), {
+      target: { value: "Cliente de Teste" },
+    });
+
+    const submitButton = screen.getByText("Confirmar");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: "Cliente de Teste",
+          telefone: null,
+          email: null,
+          senha: expect.any(String),
+        }),
+      );
+    });
+
+    const calls = mockCreate.mock.calls;
+    const submittedData = calls[0][0];
+    expect(submittedData.senha.length).toBeGreaterThan(10);
+  });
+
+  it("deve enviar todos os campos preenchidos corretamente", async () => {
+    const mockCreate = clienteService.create as Mock;
+    mockCreate.mockResolvedValue({});
+
+    render(<ClienteForm />);
+
+    fireEvent.change(screen.getByLabelText(/Nome/i), {
+      target: { value: "Maria Silva" },
+    });
+    fireEvent.change(screen.getByLabelText(/Telefone/i), {
+      target: { value: "87988887777" },
+    });
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "maria@email.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/CEP/i), {
+      target: { value: "55290-000" },
+    });
+    fireEvent.change(screen.getByLabelText(/Rua/i), {
+      target: { value: "Rua Teste" },
+    });
+    fireEvent.change(screen.getByLabelText(/Número/i), {
+      target: { value: "123" },
+    });
+    fireEvent.change(screen.getByLabelText(/Bairro/i), {
+      target: { value: "Centro" },
+    });
+    fireEvent.change(screen.getByLabelText(/Cidade/i), {
+      target: { value: "Garanhuns" },
+    });
+    fireEvent.change(screen.getByLabelText("Estado"), {
+      target: { value: "PE" },
+    });
+
+    const submitButton = screen.getByText("Confirmar");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: "Maria Silva",
+          telefone: "87988887777",
+          email: "maria@email.com",
+          cep: "55290-000",
+          rua: "Rua Teste",
+          numero: "123",
+          bairro: "Centro",
+          cidade: "Garanhuns",
+          estado: "PE",
+          senha: expect.any(String),
+        }),
+      );
+    });
+  });
+
+  it("deve navegar para dashboard ao clicar em cancelar", () => {
+    render(<ClienteForm />);
+
+    const cancelButton = screen.getByText("Cancelar");
+    fireEvent.click(cancelButton);
+
+    expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });
 });

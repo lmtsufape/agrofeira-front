@@ -16,7 +16,7 @@ describe("useForgotPassword", () => {
     const { result } = renderHook(() => useForgotPassword());
 
     act(() => {
-      result.current.setUsername("user_test");
+      result.current.setIdentifier("user_test");
     });
 
     const event = {

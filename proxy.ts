@@ -3,54 +3,46 @@ import type { NextRequest } from "next/server";
 
 const TOKEN_KEY = "agrofeira_token";
 
+// Define rotas públicas que não exigem autenticação
+const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password"];
+
+/**
+ * Middleware de Proxy/Segurança (Padrão Next.js 16.2+)
+ */
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get(TOKEN_KEY)?.value;
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get(TOKEN_KEY)?.value;
 
-  const isAuthPage =
-    pathname.startsWith("/login") || pathname.startsWith("/forgot-password");
-
-  const isRootPath = pathname === "/";
-
-  // Se o usuário está na raiz "/", decide para onde ir baseado no token
-  if (isRootPath) {
-    if (token) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 1. Acesso à raiz é delegado para o app/page.tsx resolver (dashboard ou login)
+  if (pathname === "/") {
+    return NextResponse.next();
   }
 
-  // Se o usuário está autenticado e tenta acessar login/forgot-password, manda pro dashboard
-  if (token && isAuthPage) {
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/"),
+  );
+
+  // 2. Usuário autenticado acessando páginas de login/esqueci senha -> vai pro dashboard
+  // Usamos comparação exata para evitar capturar páginas inexistentes que comecem com nomes similares
+  const isExactAuthPage = PUBLIC_ROUTES.includes(pathname);
+  if (token && isExactAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Se o usuário NÃO está autenticado e tenta acessar o dashboard ou rotas protegidas
-  if (!token && !isAuthPage) {
-    // Permite acesso apenas a arquivos estáticos e manifestos
-    const isPublicStatic =
-      pathname.startsWith("/_next") ||
-      pathname.includes(".") ||
-      pathname === "/manifest.webmanifest";
-
-    if (!isPublicStatic) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  // 3. Usuário NÃO autenticado acessando rotas privadas -> vai pro login
+  if (!token && !isPublicRoute) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
-// Configuração dos paths que o proxy deve interceptar
+// Configuração de Matcher para interceptar rotas
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * Ignora rotas de API e arquivos com extensões (estáticos, imagens, favicon, etc)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.).*)",
   ],
 };

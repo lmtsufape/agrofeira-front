@@ -1,98 +1,122 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { ComercianteForm } from "../ComercianteForm";
-import { useCadastrarComerciante } from "../../hooks/useCadastrarComerciante";
+import { comercianteService } from "../../api/comerciantes.service";
+import { useRouter } from "next/navigation";
 
-vi.mock("../../hooks/useCadastrarComerciante");
+// Mock do service
+vi.mock("../../api/comerciantes.service", () => ({
+  comercianteService: {
+    create: vi.fn(),
+  },
+}));
+
+// Mock do next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(),
+}));
 
 describe("ComercianteForm Component", () => {
-  const mockHandleInputChange = vi.fn();
-  const mockHandleSubmit = vi.fn();
-  const mockHandleCancel = vi.fn();
-
-  const baseHookValue = {
-    formData: {
-      name: "",
-      phone: "",
-      email: "",
-      description: "",
-    },
-    handleInputChange: mockHandleInputChange,
-    handleSubmit: mockHandleSubmit,
-    handleCancel: mockHandleCancel,
-    submitting: false,
-    erro: null,
-  };
+  const mockPush = vi.fn();
+  const mockBack = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useCadastrarComerciante as Mock).mockReturnValue(baseHookValue);
+    (useRouter as Mock).mockReturnValue({ push: mockPush, back: mockBack });
   });
 
-  it("deve renderizar todos os campos e a seção do formulário", () => {
+  it("deve renderizar os campos corretamente", () => {
     render(<ComercianteForm />);
 
-    expect(screen.getByText("Dados do Comerciante")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Nome \*/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Telefone \*/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Nome/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Telefone/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Descrição/i)).toBeInTheDocument();
   });
 
-  it("deve chamar handleInputChange ao alterar valores dos campos", () => {
-    render(<ComercianteForm />);
+  it("deve validar que o nome é obrigatório", async () => {
+    const { container } = render(<ComercianteForm />);
 
-    const nameInput = screen.getByLabelText(/Nome \*/i);
-    fireEvent.change(nameInput, {
-      target: { value: "João da Silva", name: "name" },
-    });
-
-    expect(mockHandleInputChange).toHaveBeenCalled();
-  });
-
-  it("deve exibir alerta de erro quando houver erro no hook", () => {
-    (useCadastrarComerciante as Mock).mockReturnValue({
-      ...baseHookValue,
-      erro: "Falha ao cadastrar",
-    });
-
-    render(<ComercianteForm />);
-
-    const errorAlert = screen.getByText("Falha ao cadastrar");
-    expect(errorAlert).toBeInTheDocument();
-    // Busca o elemento com a animação de erro de forma flexível
-    expect(errorAlert.closest(".animate-shake")).toBeInTheDocument();
-  });
-
-  it("deve desabilitar o botão e mostrar texto de carregamento durante submissão", () => {
-    (useCadastrarComerciante as Mock).mockReturnValue({
-      ...baseHookValue,
-      submitting: true,
-    });
-
-    render(<ComercianteForm />);
-
-    const submitBtn = screen.getByRole("button", { name: /Salvando.../i });
-    expect(submitBtn).toBeInTheDocument();
-    expect(submitBtn).toBeDisabled();
-  });
-
-  it("deve disparar handleCancel ao clicar no botão cancelar", () => {
-    render(<ComercianteForm />);
-
-    const cancelBtn = screen.getByRole("button", { name: /Cancelar/i });
-    fireEvent.click(cancelBtn);
-
-    expect(mockHandleCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it("deve disparar handleSubmit ao submeter o formulário", () => {
-    render(<ComercianteForm />);
-
-    const form = screen
-      .getByRole("button", { name: /Confirmar/i })
-      .closest("form");
-    if (!form) throw new Error("Form não encontrado");
+    const form = container.querySelector("form");
+    if (!form) throw new Error("Form not found");
 
     fireEvent.submit(form);
-    expect(mockHandleSubmit).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(screen.getByText("O nome é obrigatório!")).toBeInTheDocument();
+    });
+
+    expect(comercianteService.create).not.toHaveBeenCalled();
+  });
+
+  it("deve enviar o formulário com dados mínimos e gerar senha aleatória", async () => {
+    const mockCreate = comercianteService.create as Mock;
+    mockCreate.mockResolvedValue({});
+
+    render(<ComercianteForm />);
+
+    fireEvent.change(screen.getByLabelText(/Nome/i), {
+      target: { value: "Comerciante Teste" },
+    });
+
+    const submitButton = screen.getByText("Confirmar");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: "Comerciante Teste",
+          telefone: null,
+          email: null,
+          senha: expect.any(String),
+        }),
+      );
+    });
+
+    const calls = mockCreate.mock.calls;
+    const submittedData = calls[0][0];
+    expect(submittedData.senha.length).toBeGreaterThan(10);
+  });
+
+  it("deve enviar todos os campos preenchidos", async () => {
+    const mockCreate = comercianteService.create as Mock;
+    mockCreate.mockResolvedValue({});
+
+    render(<ComercianteForm />);
+
+    fireEvent.change(screen.getByLabelText(/Nome/i), {
+      target: { value: "João das Frutas" },
+    });
+    fireEvent.change(screen.getByLabelText(/Telefone/i), {
+      target: { value: "87988887777" },
+    });
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "joao@email.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Descrição/i), {
+      target: { value: "Frutas frescas" },
+    });
+
+    const submitButton = screen.getByText("Confirmar");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockCreate).toHaveBeenCalledWith({
+        nome: "João das Frutas",
+        telefone: "87988887777",
+        email: "joao@email.com",
+        descricao: "Frutas frescas",
+        senha: expect.any(String),
+      });
+    });
+  });
+
+  it("deve navegar para dashboard ao clicar em cancelar", () => {
+    render(<ComercianteForm />);
+
+    const cancelButton = screen.getByText("Cancelar");
+    fireEvent.click(cancelButton);
+
+    expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });
 });

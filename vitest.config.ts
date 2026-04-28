@@ -24,6 +24,8 @@ export default defineConfig({
       //   "features/**/*.tsx",
       //   "hooks/**/*.ts",
       //   "hooks/**/*.tsx",
+      //   "lib/**/*.ts",
+      //   "lib/**/*.tsx",
       //   "utils/**/*.ts",
       //   "utils/**/*.tsx",
       // ],

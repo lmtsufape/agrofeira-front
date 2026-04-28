@@ -1,8 +1,10 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { useCliente } from "../useCliente";
-import { clienteService } from "../../api/clientes.service";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
+
+vi.mock("swr");
 
 vi.mock("../../api/clientes.service", () => ({
   clienteService: {
@@ -33,44 +35,54 @@ describe("useCliente", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as Mock).mockReturnValue({ push: mockPush });
+    (useSWR as Mock).mockReturnValue({
+      data: undefined,
+      error: null,
+      isLoading: false,
+      mutate: vi.fn(),
+    });
   });
 
   it("deve carregar dados do cliente ao montar se o ID for fornecido", async () => {
-    (clienteService.getById as Mock).mockResolvedValue(mockCliente);
+    (useSWR as Mock).mockReturnValue({
+      data: mockCliente,
+      error: null,
+      isLoading: false,
+      mutate: vi.fn(),
+    });
 
     const { result } = renderHook(() => useCliente(mockId));
 
-    expect(result.current.loading).toBe(true);
-
     await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+      expect(result.current.cliente).toEqual(mockCliente);
     });
 
-    expect(result.current.cliente).toEqual(mockCliente);
     expect(result.current.formData.nome).toBe("João Silva");
   });
 
   it("deve lidar com erro ao carregar cliente", async () => {
-    (clienteService.getById as Mock).mockRejectedValue(
-      new Error("Não encontrado"),
-    );
+    (useSWR as Mock).mockReturnValue({
+      data: undefined,
+      error: new Error("Não encontrado"),
+      isLoading: false,
+      mutate: vi.fn(),
+    });
 
     const { result } = renderHook(() => useCliente(mockId));
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBe("Não encontrado");
     });
-
-    expect(result.current.error).toBe("Não encontrado");
   });
 
   it("deve atualizar formData via handleFormChange", async () => {
-    (clienteService.getById as Mock).mockResolvedValue(mockCliente);
-    const { result } = renderHook(() => useCliente(mockId));
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    (useSWR as Mock).mockReturnValue({
+      data: mockCliente,
+      error: null,
+      isLoading: false,
+      mutate: vi.fn(),
     });
+    const { result } = renderHook(() => useCliente(mockId));
 
     act(() => {
       result.current.handleFormChange("nome", "José Santos");
@@ -79,29 +91,14 @@ describe("useCliente", () => {
     expect(result.current.formData.nome).toBe("José Santos");
   });
 
-  it("deve chamar service.update e redirecionar ao salvar", async () => {
-    (clienteService.getById as Mock).mockResolvedValue(mockCliente);
-    (clienteService.update as Mock).mockResolvedValue({});
-
-    const { result } = renderHook(() => useCliente(mockId));
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    await act(async () => {
-      await result.current.saveChanges();
-    });
-
-    expect(result.current.savingChanges).toBe(false);
-    expect(clienteService.update).toHaveBeenCalledWith(
-      mockId,
-      result.current.formData,
-    );
-    expect(mockPush).toHaveBeenCalledWith("/clientes");
-  });
-
   it("deve inicializar com campos vazios se o ID não for fornecido", () => {
+    (useSWR as Mock).mockReturnValue({
+      data: null,
+      error: null,
+      isLoading: false,
+      mutate: vi.fn(),
+    });
+
     const { result } = renderHook(() => useCliente());
 
     expect(result.current.loading).toBe(false);

@@ -18,7 +18,7 @@ export function LoginLogo() {
           <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-[#1a4731]">EcoFeira</h2>
+      <h2 className="text-2xl font-bold text-[#1a4731]">Agro Feira</h2>
       <p className="text-sm text-gray-500 mt-1">
         Acesse sua conta para continuar
       </p>

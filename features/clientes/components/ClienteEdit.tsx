@@ -130,6 +130,24 @@ export function ClienteEdit({ clienteId }: ClienteEditProps) {
               />
             </div>
 
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-xs font-bold text-[#8aaa8d] uppercase tracking-wider mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleFormChange("email", e.target.value)}
+                placeholder="exemplo@email.com"
+                className="w-full px-4 py-3.5 bg-[#fcfdfc] border border-[#c2e5cc] rounded-2xl text-base font-medium text-[#1a3d1f] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#5bc48b]"
+              />
+            </div>
+
             {/* Descrição */}
             <div>
               <label

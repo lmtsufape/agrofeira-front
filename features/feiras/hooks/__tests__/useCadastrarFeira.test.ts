@@ -1,14 +1,16 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import useSWR from "swr";
 import { useCadastrarFeira } from "../useCadastrarFeira";
 import { feiraService } from "@/features/feiras/api/feiras.service";
-import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
-import { itemService } from "@/features/itens/api/itens.service";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
+vi.mock("swr");
 vi.mock("@/features/feiras/api/feiras.service");
 vi.mock("@/features/comerciantes/api/comerciantes.service");
 vi.mock("@/features/itens/api/itens.service");
+vi.mock("@/features/auth/contexts/AuthContext");
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
@@ -21,17 +23,24 @@ describe("useCadastrarFeira", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as Mock).mockReturnValue({ push: mockPush });
-    (comercianteService.getAll as Mock).mockResolvedValue(mockComs);
-    (itemService.getAll as Mock).mockResolvedValue(mockItens);
+    (useAuth as Mock).mockReturnValue({
+      token: "valid-token",
+      isAuthenticated: true,
+    });
+
+    (useSWR as Mock).mockImplementation((key: string) => {
+      if (key?.includes("comerciantes")) {
+        return { data: { content: mockComs }, error: null };
+      }
+      if (key?.includes("itens")) {
+        return { data: { content: mockItens }, error: null };
+      }
+      return { data: null, error: null };
+    });
   });
 
   it("deve carregar dados iniciais (comerciantes e itens) ao montar", async () => {
     const { result } = renderHook(() => useCadastrarFeira());
-
-    // Aguarda o useEffect
-    await act(async () => {
-      await Promise.resolve();
-    });
 
     expect(result.current.comerciantes.right).toEqual(mockComs);
     expect(result.current.itens.right).toEqual(mockItens);

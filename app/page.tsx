@@ -13,6 +13,5 @@ export default async function RootPage() {
     redirect("/login");
   }
 
-  // Este componente nunca será renderizado devido aos redirects acima
   return null;
 }

@@ -6,7 +6,7 @@ interface Participante {
   id: string;
   nome: string;
   tipo: "cliente" | "comerciante";
-  telefone?: string;
+  telefone?: string | null;
 }
 
 const MOCK_PARTICIPANTES: Participante[] = [
@@ -58,19 +58,19 @@ export function useSelecionarParticipante() {
 
   const fetchParticipantes = useCallback(async () => {
     try {
-      const [clientes, comerciantes] = await Promise.all([
+      const [clientesPage, comerciantesPage] = await Promise.all([
         clienteService.getAll(),
         comercianteService.getAll(),
       ]);
 
       const participantesData: Participante[] = [
-        ...clientes.map((c) => ({
+        ...clientesPage.content.map((c) => ({
           id: c.id,
           nome: c.nome,
           tipo: "cliente" as const,
           telefone: c.telefone,
         })),
-        ...comerciantes.map((com) => ({
+        ...comerciantesPage.content.map((com) => ({
           id: com.id,
           nome: com.nome,
           tipo: "comerciante" as const,

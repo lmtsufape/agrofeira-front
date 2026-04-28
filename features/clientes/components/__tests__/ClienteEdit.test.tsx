@@ -25,6 +25,7 @@ describe("ClienteEdit Component", () => {
     formData: {
       nome: "",
       telefone: "",
+      email: "",
       descricao: "",
       cep: "",
       rua: "",
@@ -79,6 +80,29 @@ describe("ClienteEdit Component", () => {
     expect(screen.getByText("Gerenciar Cliente")).toBeInTheDocument();
     const nomeInput = screen.getByDisplayValue("João Silva");
     expect(nomeInput).toBeInTheDocument();
+  });
+
+  it("deve renderizar o campo email e permitir edição", () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João", email: "joao@email.com" },
+      formData: {
+        ...defaultHookReturn.formData,
+        nome: "João",
+        email: "joao@email.com",
+      },
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    const emailInput = screen.getByLabelText(/Email/i);
+    expect(emailInput).toHaveValue("joao@email.com");
+
+    fireEvent.change(emailInput, { target: { value: "novo@email.com" } });
+    expect(mockHandleFormChange).toHaveBeenCalledWith(
+      "email",
+      "novo@email.com",
+    );
   });
 
   it("deve chamar handleFormChange quando um campo é editado", () => {

@@ -27,8 +27,12 @@ describe("useSelecionarParticipante", () => {
   });
 
   it("deve carregar clientes e comerciantes ao montar", async () => {
-    (clienteService.getAll as Mock).mockResolvedValue(mockClientes);
-    (comercianteService.getAll as Mock).mockResolvedValue(mockComerciantes);
+    (clienteService.getAll as Mock).mockResolvedValue({
+      content: mockClientes,
+    });
+    (comercianteService.getAll as Mock).mockResolvedValue({
+      content: mockComerciantes,
+    });
 
     const { result } = renderHook(() => useSelecionarParticipante());
 
@@ -65,8 +69,12 @@ describe("useSelecionarParticipante", () => {
   });
 
   it("deve filtrar participantes pelo termo de busca", async () => {
-    (clienteService.getAll as Mock).mockResolvedValue(mockClientes);
-    (comercianteService.getAll as Mock).mockResolvedValue(mockComerciantes);
+    (clienteService.getAll as Mock).mockResolvedValue({
+      content: mockClientes,
+    });
+    (comercianteService.getAll as Mock).mockResolvedValue({
+      content: mockComerciantes,
+    });
 
     const { result } = renderHook(() => useSelecionarParticipante());
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -80,8 +88,12 @@ describe("useSelecionarParticipante", () => {
   });
 
   it("deve permitir selecionar um participante", async () => {
-    (clienteService.getAll as Mock).mockResolvedValue(mockClientes);
-    (comercianteService.getAll as Mock).mockResolvedValue(mockComerciantes);
+    (clienteService.getAll as Mock).mockResolvedValue({
+      content: mockClientes,
+    });
+    (comercianteService.getAll as Mock).mockResolvedValue({
+      content: mockComerciantes,
+    });
 
     const { result } = renderHook(() => useSelecionarParticipante());
     await waitFor(() => expect(result.current.loading).toBe(false));

@@ -25,11 +25,9 @@ export function RepasseDetalhes() {
       setIsLoading(true);
       setError(null);
       try {
-        console.log("Carregando detalhes do pagamento para comerciante:", id);
         const dados = await pagamentosService.obterPagamentoDetalhes(id);
         setComerciante(dados.comerciante);
         setRepasse(dados.repasse);
-        console.log("Dados carregados com sucesso:", dados);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
         const errorMessage =
@@ -47,10 +45,8 @@ export function RepasseDetalhes() {
     setIsConfirming(true);
     setError(null);
     try {
-      console.log("Iniciando confirmação de pagamento para:", id);
       await pagamentosService.confirmarPagamento(id);
       setSuccess(true);
-      console.log("Pagamento confirmado com sucesso");
 
       // Redirecionar após 1.5 segundos
       setTimeout(() => {

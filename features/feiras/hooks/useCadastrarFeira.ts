@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { feiraService } from "@/features/feiras/api/feiras.service";
 import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
 import { itemService } from "@/features/itens/api/itens.service";
 import { type ComercianteDTO } from "@/features/comerciantes/api/types";
 import { type ItemDTO } from "@/features/itens/api/types";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function pad(n: number) {
@@ -20,6 +22,7 @@ function defaultDateTime() {
 
 export function useCadastrarFeira() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const [dataFeira, setDataFeira] = useState(defaultDateTime());
   const [loadingData, setLoadingData] = useState(true);
@@ -38,15 +41,48 @@ export function useCadastrarFeira() {
   const [itLeftSel, setItLeftSel] = useState<string[]>([]);
   const [itRightSel, setItRightSel] = useState<string[]>([]);
 
+  // Fetch com SWR para cache de 15 minutos e size=1000
+  const { data: comsData, error: comsError } = useSWR(
+    isAuthenticated ? "/api/v1/comerciantes?size=1000" : null,
+    () => comercianteService.getAll({ size: 1000 }),
+    {
+      dedupingInterval: 15 * 60 * 1000,
+      revalidateOnFocus: false,
+    },
+  );
+
+  const { data: itensData, error: itensError } = useSWR(
+    isAuthenticated ? "/api/v1/itens?size=1000" : null,
+    () => itemService.getAll({ size: 1000 }),
+    {
+      dedupingInterval: 15 * 60 * 1000,
+      revalidateOnFocus: false,
+    },
+  );
+
   useEffect(() => {
-    Promise.all([comercianteService.getAll(), itemService.getAll()])
-      .then(([coms, itens]) => {
-        setCmRight(coms);
-        setItRight(itens);
-      })
-      .catch(() => setErro("Erro ao carregar dados do servidor"))
-      .finally(() => setLoadingData(false));
-  }, []);
+    if (comsData && itensData && loadingData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCmRight(comsData.content);
+
+      setItRight(itensData.content);
+
+      setLoadingData(false);
+    }
+  }, [comsData, itensData, loadingData]);
+
+  useEffect(() => {
+    if (comsError || itensError) {
+      console.error(
+        "Falha ao carregar dados iniciais:",
+        comsError || itensError,
+      );
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setErro("Erro ao carregar dados do servidor");
+
+      setLoadingData(false);
+    }
+  }, [comsError, itensError]);
 
   const toggleSel = (
     id: string,

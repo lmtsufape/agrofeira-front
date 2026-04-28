@@ -13,7 +13,7 @@ export function LoginSidePanel() {
           </span>
         </div>
         <h1 className="text-5xl font-bold leading-tight mb-8">
-          Plataforma <span className="text-[#5eba85]">EcoFeira</span>
+          Plataforma <span className="text-[#5eba85]">Agro Feira</span>
         </h1>
         <blockquote className="bg-white/10 border border-white/15 rounded-xl px-6 py-5 text-[#d1fae5] italic text-sm leading-relaxed backdrop-blur-sm">
           &quot;Fortalecendo os processos de comercialização e geração de renda

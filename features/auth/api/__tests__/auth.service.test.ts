@@ -1,45 +1,103 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { loginUser, forgotPassword } from "../auth.service";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import {
+  loginUser,
+  forgotPassword,
+  resetPassword,
+  refreshAuthToken,
+  logoutUser,
+} from "../auth.service";
+import { apiClient } from "@/lib/api-client";
+
+vi.mock("@/lib/api-client", () => ({
+  apiClient: vi.fn(),
+}));
 
 describe("auth.service", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.clearAllMocks();
   });
 
   describe("loginUser", () => {
-    it("deve autenticar com sucesso usuários válidos", async () => {
-      const loginPromise = loginUser({ username: "admin", password: "123456" });
+    it("deve chamar o endpoint de login com credenciais", async () => {
+      const mockResponse = {
+        token: "jwt-token",
+        refreshToken: "refresh-uuid",
+      };
+      (apiClient as Mock).mockResolvedValue(mockResponse);
 
-      // Avança o timer do setTimeout simulado
-      vi.runAllTimers();
+      const result = await loginUser({
+        username: "user@test.com",
+        password: "123",
+      });
 
-      const response = await loginPromise;
-      expect(response.username).toBe("admin");
-      expect(response.token).toBeDefined();
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ username: "user@test.com", password: "123" }),
+      });
+      expect(result).toEqual(mockResponse);
     });
+  });
 
-    it("deve lançar erro para credenciais inválidas", async () => {
-      const loginPromise = loginUser({ username: "wrong", password: "wrong" });
-      vi.runAllTimers();
+  describe("refreshAuthToken", () => {
+    it("deve chamar o endpoint de refresh", async () => {
+      const mockResponse = { token: "new-jwt", refreshToken: "same-refresh" };
+      (apiClient as Mock).mockResolvedValue(mockResponse);
 
-      await expect(loginPromise).rejects.toThrow("Usuário ou senha inválidos");
+      const result = await refreshAuthToken("old-refresh");
+
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/auth/refresh", {
+        method: "POST",
+        body: JSON.stringify({ refreshToken: "old-refresh" }),
+      });
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("logoutUser", () => {
+    it("deve chamar o endpoint de logout com token e refreshToken no body", async () => {
+      (apiClient as Mock).mockResolvedValue(undefined);
+
+      await logoutUser("jwt-token", "refresh-token");
+
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({
+          token: "jwt-token",
+          refreshToken: "refresh-token",
+        }),
+        authToken: "jwt-token",
+      });
     });
   });
 
   describe("forgotPassword", () => {
-    it("deve processar recuperação para usuário existente", async () => {
-      const promise = forgotPassword("admin");
-      vi.runAllTimers();
+    it("deve processar recuperação com sucesso", async () => {
+      (apiClient as Mock).mockResolvedValue(undefined);
 
-      await expect(promise).resolves.toBeUndefined();
+      await forgotPassword("nettojulio@hotmail.com");
+
+      expect(apiClient).toHaveBeenCalledWith(
+        "/api/v1/auth/forgot-password",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ identifier: "nettojulio@hotmail.com" }),
+        }),
+      );
     });
+  });
 
-    it("deve lançar erro para usuário inexistente", async () => {
-      const promise = forgotPassword("non_existent");
-      vi.runAllTimers();
+  describe("resetPassword", () => {
+    it("deve processar redefinição com sucesso", async () => {
+      (apiClient as Mock).mockResolvedValue(undefined);
 
-      await expect(promise).rejects.toThrow(
-        "Usuário não encontrado em nossa base de dados",
+      await resetPassword("token-123", "nova-senha");
+
+      expect(apiClient).toHaveBeenCalledWith(
+        "/api/v1/auth/reset-password",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ token: "token-123", novaSenha: "nova-senha" }),
+        }),
       );
     });
   });

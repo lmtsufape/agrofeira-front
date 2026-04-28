@@ -16,16 +16,13 @@ vi.mock("next/navigation", () => ({
 
 describe("ComerciantesList Component", () => {
   const mockPush = vi.fn();
-  const mockSetSearchTerm = vi.fn();
 
   const defaultHookReturn = {
-    filteredComerciantes: [],
     comerciantes: [],
-    loading: false,
-    error: null,
-    searchTerm: "",
-    setSearchTerm: mockSetSearchTerm,
-    refresh: vi.fn(),
+    pageData: { totalPages: 1, totalElements: 0 },
+    isLoading: false,
+    isError: null,
+    mutate: vi.fn(),
   };
 
   beforeEach(() => {
@@ -36,7 +33,7 @@ describe("ComerciantesList Component", () => {
   it("deve exibir estado de carregamento", () => {
     (useComerciantes as Mock).mockReturnValue({
       ...defaultHookReturn,
-      loading: true,
+      isLoading: true,
     });
 
     render(<ComerciantesList />);
@@ -46,11 +43,13 @@ describe("ComerciantesList Component", () => {
   it("deve exibir mensagem de erro quando houver falha", () => {
     (useComerciantes as Mock).mockReturnValue({
       ...defaultHookReturn,
-      error: "Erro na API",
+      isError: new Error("Erro na API"),
     });
 
     render(<ComerciantesList />);
-    expect(screen.getByText("Erro na API")).toBeInTheDocument();
+    expect(
+      screen.getByText("Erro ao carregar comerciantes"),
+    ).toBeInTheDocument();
   });
 
   it("deve listar comerciantes corretamente", () => {
@@ -62,7 +61,7 @@ describe("ComerciantesList Component", () => {
     (useComerciantes as Mock).mockReturnValue({
       ...defaultHookReturn,
       comerciantes: mockComerciantes,
-      filteredComerciantes: mockComerciantes,
+      pageData: { totalPages: 1, totalElements: 2 },
     });
 
     render(<ComerciantesList />);
@@ -78,7 +77,7 @@ describe("ComerciantesList Component", () => {
 
     (useComerciantes as Mock).mockReturnValue({
       ...defaultHookReturn,
-      filteredComerciantes: mockComerciantes,
+      comerciantes: mockComerciantes,
     });
 
     render(<ComerciantesList />);
@@ -89,21 +88,23 @@ describe("ComerciantesList Component", () => {
     expect(mockPush).toHaveBeenCalledWith("/comerciantes/777");
   });
 
-  it("deve chamar setSearchTerm ao digitar na busca", () => {
+  it("deve atualizar o campo de busca ao digitar", () => {
     (useComerciantes as Mock).mockReturnValue(defaultHookReturn);
 
     render(<ComerciantesList />);
 
-    const input = screen.getByPlaceholderText("Buscar comerciante...");
+    const input = screen.getByPlaceholderText(
+      "Buscar comerciante...",
+    ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "Mercado" } });
 
-    expect(mockSetSearchTerm).toHaveBeenCalledWith("Mercado");
+    expect(input.value).toBe("Mercado");
   });
 
-  it("deve exibir mensagem se não houver resultados no filtro", () => {
+  it("deve exibir mensagem se não houver resultados", () => {
     (useComerciantes as Mock).mockReturnValue({
       ...defaultHookReturn,
-      filteredComerciantes: [],
+      comerciantes: [],
     });
 
     render(<ComerciantesList />);

@@ -25,7 +25,7 @@ describe("useFeiras", () => {
 
   it("deve carregar feiras com sucesso", async () => {
     (useAuth as Mock).mockReturnValue({ token: "valid-token" });
-    (feiraService.getAll as Mock).mockResolvedValue(mockFeiras);
+    (feiraService.getAll as Mock).mockResolvedValue({ content: mockFeiras });
 
     const { result } = renderHook(() => useFeiras());
 
@@ -39,7 +39,7 @@ describe("useFeiras", () => {
 
   it("deve gerenciar a seleção de uma feira", async () => {
     (useAuth as Mock).mockReturnValue({ token: "valid-token" });
-    (feiraService.getAll as Mock).mockResolvedValue(mockFeiras);
+    (feiraService.getAll as Mock).mockResolvedValue({ content: mockFeiras });
 
     const { result } = renderHook(() => useFeiras());
     await act(async () => {
