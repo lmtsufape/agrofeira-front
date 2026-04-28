@@ -1,52 +1,58 @@
-import { useState, useEffect, useCallback } from "react";
+"use client";
+
+import useSWR from "swr";
+import { useState, useEffect } from "react";
+import { swrFetcher } from "@/lib/swr-fetcher";
 import { comercianteService } from "../api/comerciantes.service";
 import { ComercianteDTO, CategoriaDTO } from "../api/types";
 
 export function useComerciante(comercianteId: string) {
-  const [comerciante, setComerciante] = useState<ComercianteDTO | null>(null);
-  const [allCategories, setAllCategories] = useState<CategoriaDTO[]>([]);
-  const [activeCategories, setActiveCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [savingChanges, setSavingChanges] = useState(false);
+  // Queries individuais via SWR
+  const {
+    data: comerciante,
+    error: comercianteError,
+    isLoading: isLoadingComerciante,
+    mutate: mutateComerciante,
+  } = useSWR<ComercianteDTO>(
+    `/api/v1/comerciantes/${comercianteId}`,
+    swrFetcher,
+  );
 
+  const { data: allCategories, isLoading: isLoadingCategories } = useSWR<
+    CategoriaDTO[]
+  >("/api/v1/categorias", swrFetcher);
+
+  const {
+    data: activeCategories,
+    mutate: mutateActiveCategories,
+    isLoading: isLoadingActiveCategories,
+  } = useSWR<string[]>(
+    `/api/v1/comerciantes/${comercianteId}/categorias`,
+    async () => {
+      return comercianteService.buscarCategoriasComerciante(comercianteId);
+    },
+  );
+
+  const [savingChanges, setSavingChanges] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     telefone: "",
+    email: "",
     descricao: "",
   });
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [comercianteData, categoriesData, comercianteCategorias] =
-        await Promise.all([
-          comercianteService.getById(comercianteId),
-          comercianteService.listarCategorias(),
-          comercianteService.buscarCategoriasComerciante(comercianteId),
-        ]);
-
-      setComerciante(comercianteData);
-      setAllCategories(categoriesData);
-      setActiveCategories(comercianteCategorias);
-      setFormData({
-        nome: comercianteData.nome,
-        telefone: comercianteData.telefone,
-        descricao: comercianteData.descricao || "",
-      });
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao buscar dados");
-    } finally {
-      setLoading(false);
-    }
-  }, [comercianteId]);
-
+  // Sincroniza o formData quando o comerciante termina de carregar
   useEffect(() => {
-    const init = async () => {
-      await fetchData();
-    };
-    init();
-  }, [fetchData]);
+    if (comerciante && !formData.nome && !formData.telefone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData({
+        nome: comerciante.nome,
+        telefone: comerciante.telefone || "",
+        email: comerciante.email || "",
+        descricao: comerciante.descricao || "",
+      });
+    }
+  }, [comerciante, formData.nome, formData.telefone]);
 
   const handleFormChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -62,12 +68,11 @@ export function useComerciante(comercianteId: string) {
         comercianteService.update(comercianteId, formData),
         comercianteService.atualizarCategoriasComerciante(
           comercianteId,
-          newActiveCategories || activeCategories,
+          newActiveCategories || activeCategories || [],
         ),
       ]);
-      await fetchData();
-    } catch (err) {
-      throw err;
+      // Revalida os dados no SWR
+      await Promise.all([mutateComerciante(), mutateActiveCategories()]);
     } finally {
       setSavingChanges(false);
     }
@@ -80,26 +85,34 @@ export function useComerciante(comercianteId: string) {
         comercianteId,
         categoryIds,
       );
-      setActiveCategories(categoryIds);
-    } catch (err) {
-      throw err;
+      await mutateActiveCategories(categoryIds, false);
     } finally {
       setSavingChanges(false);
     }
   };
 
+  const isLoading =
+    isLoadingComerciante || isLoadingCategories || isLoadingActiveCategories;
+  const error = comercianteError
+    ? comercianteError instanceof Error
+      ? comercianteError.message
+      : "Erro ao carregar"
+    : null;
+
   return {
     comerciante,
-    allCategories,
-    activeCategories,
-    setActiveCategories,
+    allCategories: allCategories || [],
+    activeCategories: activeCategories || [],
     formData,
-    loading,
+    loading: isLoading,
     error,
     savingChanges,
     handleFormChange,
     saveChanges,
     updateCategories,
-    refresh: fetchData,
+    refresh: () => {
+      mutateComerciante();
+      mutateActiveCategories();
+    },
   };
 }

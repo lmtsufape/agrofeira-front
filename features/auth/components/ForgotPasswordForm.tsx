@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { useForgotPassword } from "../hooks/useForgotPassword";
 
 export function ForgotPasswordForm() {
-  const { username, setUsername, error, success, loading, handleSubmit } =
+  const { identifier, setIdentifier, error, success, loading, handleSubmit } =
     useForgotPassword();
 
   if (success) {
@@ -26,7 +26,7 @@ export function ForgotPasswordForm() {
         </h2>
         <p className="text-[#8aaa8d] text-sm leading-relaxed mb-8">
           Se o usuário{" "}
-          <span className="font-semibold text-[#1a3d1f]">{username}</span>{" "}
+          <span className="font-semibold text-[#1a3d1f]">{identifier}</span>{" "}
           estiver cadastrado, você receberá um link de recuperação em seu e-mail
           em instantes.
         </p>
@@ -48,16 +48,16 @@ export function ForgotPasswordForm() {
           Recuperar Senha
         </h2>
         <p className="text-[#8aaa8d] text-sm leading-relaxed">
-          Informe seu nome de usuário para que possamos enviar as instruções de
-          recuperação.
+          Informe seu e-mail ou nome de usuário para que possamos enviar as
+          instruções de recuperação.
         </p>
       </div>
 
       <Input
-        label="Usuário"
-        placeholder="Digite seu usuário"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        label="E-mail ou Usuário"
+        placeholder="Digite seu e-mail ou usuário"
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
         required
         icon={<User size={18} />}
       />

@@ -45,7 +45,7 @@ export function useFeiras() {
       }
       try {
         const data = await feiraService.getAll();
-        setFeiras(data);
+        setFeiras(data.content);
       } catch {
         setFeiras(MOCK_FEIRAS);
         setError(

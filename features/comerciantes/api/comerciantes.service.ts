@@ -8,19 +8,19 @@ import {
 import { apiClient } from "@/lib/api-client";
 
 const baseService = createBaseService<ComercianteDTO, CreateComercianteDTO>(
-  "/api/comerciantes",
+  "/api/v1/comerciantes",
 );
 
 export const comercianteService = {
   ...baseService,
 
   async listarCategorias(): Promise<CategoriaDTO[]> {
-    return apiClient("/api/categorias");
+    return apiClient("/api/v1/categorias");
   },
 
   async buscarCategoriasComerciante(comercianteId: string): Promise<string[]> {
     const data = await apiClient<{ categorias: string[] }>(
-      `/api/comerciantes/${comercianteId}/categorias`,
+      `/api/v1/comerciantes/${comercianteId}/categorias`,
     );
     return data.categorias || [];
   },
@@ -29,7 +29,7 @@ export const comercianteService = {
     comercianteId: string,
     categoriaIds: string[],
   ): Promise<ComercianteComCategoriasDTO> {
-    return apiClient(`/api/comerciantes/${comercianteId}/categorias`, {
+    return apiClient(`/api/v1/comerciantes/${comercianteId}/categorias`, {
       method: "PUT",
       body: JSON.stringify({ categorias: categoriaIds }),
     });

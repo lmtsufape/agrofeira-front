@@ -7,13 +7,13 @@ vi.mock("../../hooks/useForgotPassword");
 
 describe("ForgotPasswordForm Component", () => {
   const mockHandleSubmit = vi.fn();
-  const mockSetUsername = vi.fn();
+  const mockSetIdentifier = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useForgotPassword as Mock).mockReturnValue({
-      username: "",
-      setUsername: mockSetUsername,
+      identifier: "",
+      setIdentifier: mockSetIdentifier,
       error: "",
       success: false,
       loading: false,
@@ -25,14 +25,14 @@ describe("ForgotPasswordForm Component", () => {
     render(<ForgotPasswordForm />);
     expect(screen.getByText(/Recuperar Senha/i)).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText(/Digite seu usuário/i),
+      screen.getByPlaceholderText(/Digite seu e-mail ou usuário/i),
     ).toBeInTheDocument();
   });
 
   it("deve exibir mensagem de sucesso e esconder o formulário", () => {
     (useForgotPassword as Mock).mockReturnValue({
-      username: "test_user",
-      setUsername: mockSetUsername,
+      identifier: "test_user",
+      setIdentifier: mockSetIdentifier,
       error: "",
       success: true,
       loading: false,
@@ -43,14 +43,14 @@ describe("ForgotPasswordForm Component", () => {
     expect(screen.getByText("Solicitação Enviada!")).toBeInTheDocument();
     expect(screen.getByText(/test_user/i)).toBeInTheDocument();
     expect(
-      screen.queryByPlaceholderText(/Digite seu usuário/i),
+      screen.queryByPlaceholderText(/Digite seu e-mail ou usuário/i),
     ).not.toBeInTheDocument();
   });
 
   it("deve desabilitar botão durante carregamento", () => {
     (useForgotPassword as Mock).mockReturnValue({
-      username: "",
-      setUsername: mockSetUsername,
+      identifier: "",
+      setIdentifier: mockSetIdentifier,
       error: "",
       success: false,
       loading: true,

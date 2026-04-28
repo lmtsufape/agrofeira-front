@@ -64,4 +64,33 @@ describe("TransferList", () => {
     fireEvent.click(screen.getByTitle("Remover todos"));
     expect(mockFns.onMoveAllToLeft).toHaveBeenCalled();
   });
+
+  it("deve filtrar itens localmente ao digitar no campo de busca", () => {
+    const manyLeftItems = [
+      { id: "1", label: "Abacate" },
+      { id: "2", label: "Banana" },
+    ];
+    render(
+      <TransferList
+        icon={Users}
+        title="Teste"
+        leftLabel="L"
+        rightLabel="R"
+        leftItems={manyLeftItems}
+        rightItems={[]}
+        leftSelected={[]}
+        rightSelected={[]}
+        {...mockFns}
+      />,
+    );
+
+    expect(screen.getByText("Abacate")).toBeInTheDocument();
+    expect(screen.getByText("Banana")).toBeInTheDocument();
+
+    const searchInput = screen.getAllByPlaceholderText("Buscar...")[0];
+    fireEvent.change(searchInput, { target: { value: "aba" } });
+
+    expect(screen.getByText("Abacate")).toBeInTheDocument();
+    expect(screen.queryByText("Banana")).not.toBeInTheDocument();
+  });
 });

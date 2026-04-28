@@ -40,7 +40,7 @@ describe("useLoginForm", () => {
   it("deve realizar login com sucesso e redirecionar", async () => {
     (loginUser as Mock).mockResolvedValue({
       token: "tk-123",
-      username: "admin",
+      refreshToken: "rf-456",
     });
     const { result } = renderHook(() => useLoginForm());
 
@@ -60,7 +60,7 @@ describe("useLoginForm", () => {
       username: "admin",
       password: "123456",
     });
-    expect(mockLogin).toHaveBeenCalledWith("tk-123", "admin");
+    expect(mockLogin).toHaveBeenCalledWith("tk-123", "rf-456");
     expect(mockPush).toHaveBeenCalledWith("/dashboard");
     expect(result.current.loading).toBe(false);
   });

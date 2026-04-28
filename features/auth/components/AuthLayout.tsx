@@ -22,7 +22,7 @@ export function AuthLayout({ children }: Readonly<AuthLayoutProps>) {
           {children}
 
           <p className="text-center text-xs text-gray-400 mt-8">
-            {`© ${new Date().getFullYear()} EcoFeira · Associação Agroecológica · Todos os direitos`}
+            {`© ${new Date().getFullYear()} Agro Feira · Associação Agroecológica · Todos os direitos`}
             reservados
           </p>
         </div>

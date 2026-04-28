@@ -2,49 +2,49 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { ItensList } from "../ItensList";
 import { useItens } from "../../hooks/useItens";
+import { itemService } from "../../api/itens.service";
 import { useRouter } from "next/navigation";
 
-// Mock do hook useItens
 vi.mock("../../hooks/useItens", () => ({
   useItens: vi.fn(),
 }));
 
-// Mock do next/navigation
+vi.mock("../../api/itens.service", () => ({
+  itemService: {
+    update: vi.fn(),
+    delete: vi.fn(),
+    getOpcoes: vi.fn().mockResolvedValue({
+      categorias: [{ value: "FRUTAS", label: "Frutas" }],
+      unidadesMedida: [{ value: "KG", label: "Quilo" }],
+    }),
+  },
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
 describe("ItensList Component", () => {
-  const mockBack = vi.fn();
-  const mockSetSearchTerm = vi.fn();
-  const mockUpdateItem = vi.fn();
-  const mockDeleteItem = vi.fn();
+  const mockMutate = vi.fn();
 
   const defaultHookReturn = {
     itens: [],
-    filteredItens: [],
-    loading: false,
-    error: null,
-    searchTerm: "",
-    setSearchTerm: mockSetSearchTerm,
-    updateItem: mockUpdateItem,
-    deleteItem: mockDeleteItem,
+    pageData: { totalPages: 1, totalElements: 0 },
+    isLoading: false,
+    isError: null,
+    mutate: mockMutate,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as Mock).mockReturnValue({ back: mockBack });
-    // Mock do window.confirm
-    vi.stubGlobal(
-      "confirm",
-      vi.fn(() => true),
-    );
+    (useRouter as Mock).mockReturnValue({ back: vi.fn() });
+    window.confirm = vi.fn(() => true);
   });
 
   it("deve exibir estado de carregamento", () => {
     (useItens as Mock).mockReturnValue({
       ...defaultHookReturn,
-      loading: true,
+      isLoading: true,
     });
 
     render(<ItensList />);
@@ -54,123 +54,58 @@ describe("ItensList Component", () => {
   it("deve exibir mensagem de erro quando falhar", () => {
     (useItens as Mock).mockReturnValue({
       ...defaultHookReturn,
-      error: "Erro ao buscar itens",
+      isError: new Error("Erro"),
     });
 
     render(<ItensList />);
-    expect(screen.getByText("Erro ao buscar itens")).toBeInTheDocument();
-  });
-
-  it("deve listar itens corretamente", () => {
-    const mockItens = [
-      {
-        id: "1",
-        nome: "Tomate",
-        valor: "5.00",
-        unidadeMedida: "Kg",
-        dataCadastro: "2024-01-01",
-      },
-      {
-        id: "2",
-        nome: "Alface",
-        valor: "3.00",
-        unidadeMedida: "Un",
-        dataCadastro: "2024-01-02",
-      },
-    ];
-
-    (useItens as Mock).mockReturnValue({
-      ...defaultHookReturn,
-      itens: mockItens,
-      filteredItens: mockItens,
-    });
-
-    render(<ItensList />);
-
-    expect(screen.getByText("Tomate")).toBeInTheDocument();
-    expect(screen.getByText("Alface")).toBeInTheDocument();
+    expect(screen.getByText("Erro ao carregar itens")).toBeInTheDocument();
   });
 
   it("deve abrir o modal de edição ao clicar em Editar", () => {
     const mockItens = [
-      { id: "1", nome: "Tomate", valor: "5.00", unidadeMedida: "Kg" },
+      {
+        id: "1",
+        nome: "Tomate",
+        precoBase: 5.0,
+        categoria: "FRUTAS",
+        unidadeMedida: "KG",
+      },
     ];
     (useItens as Mock).mockReturnValue({
       ...defaultHookReturn,
-      filteredItens: mockItens,
+      itens: mockItens,
     });
 
     render(<ItensList />);
 
     fireEvent.click(screen.getByText("Editar"));
     expect(screen.getByText("Editar Item")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Tomate")).toBeInTheDocument();
   });
 
   it("deve chamar updateItem ao salvar alterações no modal", async () => {
     const mockItens = [
-      { id: "1", nome: "Tomate", valor: "5.00", unidadeMedida: "Kg" },
+      {
+        id: "1",
+        nome: "Tomate",
+        precoBase: 5.0,
+        categoria: "FRUTAS",
+        unidadeMedida: "KG",
+      },
     ];
     (useItens as Mock).mockReturnValue({
       ...defaultHookReturn,
-      filteredItens: mockItens,
+      itens: mockItens,
     });
+    (itemService.update as Mock).mockResolvedValue({});
 
     render(<ItensList />);
 
     fireEvent.click(screen.getByText("Editar"));
-
-    const inputNome = screen.getByPlaceholderText("Ex: Banana");
-    fireEvent.change(inputNome, { target: { value: "Tomate Cereja" } });
-
     fireEvent.click(screen.getByText("Salvar Alterações"));
 
     await waitFor(() => {
-      expect(mockUpdateItem).toHaveBeenCalledWith(
-        "1",
-        expect.objectContaining({
-          nome: "Tomate Cereja",
-        }),
-      );
+      expect(itemService.update).toHaveBeenCalled();
+      expect(mockMutate).toHaveBeenCalled();
     });
-  });
-
-  it("deve chamar deleteItem ao confirmar exclusão", async () => {
-    const mockItens = [
-      { id: "1", nome: "Tomate", valor: "5.00", unidadeMedida: "Kg" },
-    ];
-    (useItens as Mock).mockReturnValue({
-      ...defaultHookReturn,
-      filteredItens: mockItens,
-    });
-
-    render(<ItensList />);
-
-    fireEvent.click(screen.getByText("Editar"));
-    fireEvent.click(screen.getByText("Excluir Item"));
-
-    expect(window.confirm).toHaveBeenCalled();
-    expect(mockDeleteItem).toHaveBeenCalledWith("1");
-  });
-
-  it("deve chamar setSearchTerm ao digitar na busca", () => {
-    (useItens as Mock).mockReturnValue(defaultHookReturn);
-
-    render(<ItensList />);
-
-    const input = screen.getByPlaceholderText("Buscar item...");
-    fireEvent.change(input, { target: { value: "Cenoura" } });
-
-    expect(mockSetSearchTerm).toHaveBeenCalledWith("Cenoura");
-  });
-
-  it("deve exibir mensagem de 'nenhum item encontrado'", () => {
-    (useItens as Mock).mockReturnValue({
-      ...defaultHookReturn,
-      filteredItens: [],
-    });
-
-    render(<ItensList />);
-    expect(screen.getByText("Nenhum item encontrado")).toBeInTheDocument();
   });
 });

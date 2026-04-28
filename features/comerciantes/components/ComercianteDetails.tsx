@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Phone,
+  Mail,
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
@@ -22,8 +23,7 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
   const {
     comerciante,
     allCategories,
-    activeCategories,
-    setActiveCategories,
+    activeCategories: serverActiveCategories,
     formData,
     loading,
     error,
@@ -32,25 +32,36 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
     saveChanges,
   } = useComerciante(comercianteId);
 
+  const [localActiveCategories, setLocalActiveCategories] = useState<string[]>(
+    [],
+  );
   const [selectedInactive, setSelectedInactive] = useState<string[]>([]);
   const [selectedActive, setSelectedActive] = useState<string[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [hasInitializedCategories, setHasInitializedCategories] =
+    useState(false);
+
+  // Sincroniza categorias do servidor com estado local apenas uma vez ou quando os dados do servidor mudam
+  if (serverActiveCategories.length > 0 && !hasInitializedCategories) {
+    setLocalActiveCategories(serverActiveCategories);
+    setHasInitializedCategories(true);
+  }
 
   const inactiveCategories = allCategories.filter(
-    (cat) => !activeCategories.includes(cat.id),
+    (cat) => !localActiveCategories.includes(cat.id),
   );
   const active = allCategories.filter((cat) =>
-    activeCategories.includes(cat.id),
+    localActiveCategories.includes(cat.id),
   );
 
   const handleAddSelected = () => {
-    setActiveCategories([...activeCategories, ...selectedInactive]);
+    setLocalActiveCategories([...localActiveCategories, ...selectedInactive]);
     setSelectedInactive([]);
   };
 
   const handleRemoveSelected = () => {
-    setActiveCategories(
-      activeCategories.filter((id) => !selectedActive.includes(id)),
+    setLocalActiveCategories(
+      localActiveCategories.filter((id) => !selectedActive.includes(id)),
     );
     setSelectedActive([]);
   };
@@ -81,7 +92,7 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
 
   const handleSaveChanges = async () => {
     try {
-      await saveChanges();
+      await saveChanges(localActiveCategories);
       setIsEditModalOpen(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Erro ao salvar alterações");
@@ -128,9 +139,22 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
               <h2 className="text-xl sm:text-2xl font-bold text-[#1a3d1f]">
                 {comerciante.nome}
               </h2>
-              <div className="flex items-center gap-2 text-[#8aaa8d] text-sm mt-1 justify-center sm:justify-start">
-                <Phone size={14} />
-                {comerciante.telefone}
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-[#8aaa8d] text-sm mt-1 justify-center sm:justify-start">
+                {comerciante.telefone && (
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} />
+                    {comerciante.telefone}
+                  </div>
+                )}
+                {comerciante.telefone && comerciante.email && (
+                  <span className="hidden sm:inline-block w-px h-4 bg-[#8aaa8d]" />
+                )}
+                {comerciante.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} />
+                    {comerciante.email}
+                  </div>
+                )}
               </div>
             </div>
             <p className="text-sm text-[#4b5563] max-w-md">
@@ -385,6 +409,24 @@ export function ComercianteDetails({ comercianteId }: ComercianteDetailsProps) {
                       handleFormChange("telefone", e.target.value)
                     }
                     placeholder="(00) 00000-0000"
+                    className="w-full px-4 py-3 bg-[#f6faf4] border border-[#daeeda] rounded-lg text-sm placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#5bc48b]"
+                  />
+                </div>
+
+                {/* Campo Email */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="edit-email"
+                    className="text-xs font-bold text-[#5bc48b] uppercase tracking-wide"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="edit-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleFormChange("email", e.target.value)}
+                    placeholder="exemplo@email.com"
                     className="w-full px-4 py-3 bg-[#f6faf4] border border-[#daeeda] rounded-lg text-sm placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#5bc48b]"
                   />
                 </div>

@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FormSection } from "@/components/ui/FormSection";
-import { useCadastrarCliente } from "../hooks/useCadastrarCliente";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
+import { clienteService } from "@/features/clientes/api/clientes.service";
 
 const STATE_OPTIONS = [
   { value: "", label: "UF" },
@@ -47,7 +48,49 @@ export function ClienteForm() {
     handleCancel,
     submitting,
     erro,
-  } = useCadastrarCliente();
+  } = useFormSubmit({
+    initialValues: {
+      name: "",
+      phone: "",
+      email: "",
+      description: "",
+      cep: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+    },
+    validate: (data) => {
+      if (!data.name) {
+        return "O nome é obrigatório!";
+      }
+      return null;
+    },
+    onSubmit: async (data) => {
+      // Gera uma senha aleatória pois o backend exige mas o usuário não terá acesso
+      const generatedPassword =
+        Math.random().toString(36).slice(-10) +
+        Math.random().toString(36).slice(-10);
+
+      await clienteService.create({
+        nome: data.name,
+        telefone: data.phone || null,
+        email: data.email || null,
+        descricao: data.description || null,
+        cep: data.cep || null,
+        rua: data.street || null,
+        numero: data.number || null,
+        complemento: data.complement || null,
+        bairro: data.neighborhood || null,
+        cidade: data.city || null,
+        estado: data.state || null,
+        senha: generatedPassword,
+      });
+    },
+    errorMessageFallback: "Erro ao cadastrar cliente",
+  });
 
   return (
     <div className="rounded-2xl p-5 md:p-6 bg-white shadow-[0_2px_16px_rgba(0,61,4,0.07),0_0_0_1px_rgba(0,61,4,0.06)]">
@@ -67,24 +110,37 @@ export function ClienteForm() {
             <Input
               label="Nome *"
               name="name"
+              id="name"
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Ex: Maria Oliveira"
               required
             />
             <Input
-              label="Telefone *"
+              label="Telefone"
               name="phone"
+              id="phone"
               type="tel"
               value={formData.phone}
               onChange={handleInputChange}
-              placeholder="(00) 00000-0000"
-              required
+              placeholder="(87) 98888-7777"
             />
+            <div className="md:col-span-2">
+              <Input
+                label="Email"
+                name="email"
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="exemplo@email.com"
+              />
+            </div>
           </div>
           <Textarea
             label="Descrição / Observações"
             name="description"
+            id="description"
             value={formData.description}
             onChange={handleInputChange}
             placeholder="Preferências de compra, observações sobre entregas..."
@@ -101,6 +157,7 @@ export function ClienteForm() {
             <Input
               label="CEP"
               name="cep"
+              id="cep"
               value={formData.cep}
               onChange={handleInputChange}
               placeholder="00000-000"
@@ -110,6 +167,7 @@ export function ClienteForm() {
                 <Input
                   label="Rua / Avenida"
                   name="street"
+                  id="street"
                   value={formData.street}
                   onChange={handleInputChange}
                   placeholder="Ex: Av. Paulista"
@@ -118,6 +176,7 @@ export function ClienteForm() {
               <Input
                 label="Número"
                 name="number"
+                id="number"
                 value={formData.number}
                 onChange={handleInputChange}
                 placeholder="S/N"
@@ -126,6 +185,7 @@ export function ClienteForm() {
             <Input
               label="Complemento"
               name="complement"
+              id="complement"
               value={formData.complement}
               onChange={handleInputChange}
               placeholder="Apto, Bloco..."
@@ -134,6 +194,7 @@ export function ClienteForm() {
               <Input
                 label="Bairro"
                 name="neighborhood"
+                id="neighborhood"
                 value={formData.neighborhood}
                 onChange={handleInputChange}
                 placeholder="Centro"
@@ -141,6 +202,7 @@ export function ClienteForm() {
               <Input
                 label="Cidade"
                 name="city"
+                id="city"
                 value={formData.city}
                 onChange={handleInputChange}
                 placeholder="São Paulo"
@@ -148,6 +210,7 @@ export function ClienteForm() {
               <Select
                 label="Estado"
                 name="state"
+                id="state"
                 value={formData.state}
                 onChange={handleInputChange}
                 options={STATE_OPTIONS}
