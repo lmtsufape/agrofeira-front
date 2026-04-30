@@ -23,7 +23,7 @@ export function useLoginForm() {
     setLoading(true);
     try {
       const response = await loginUser({ username, password });
-      login(response.token, response.username);
+      login(response.token, response.refreshToken);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");

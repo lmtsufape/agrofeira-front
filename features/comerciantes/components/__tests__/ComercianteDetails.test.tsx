@@ -19,14 +19,12 @@ describe("ComercianteDetails Component", () => {
   const mockBack = vi.fn();
   const mockHandleFormChange = vi.fn();
   const mockSaveChanges = vi.fn();
-  const mockSetActiveCategories = vi.fn();
 
   const defaultHookReturn = {
     comerciante: null,
     allCategories: [],
     activeCategories: [],
-    setActiveCategories: mockSetActiveCategories,
-    formData: { nome: "", telefone: "", descricao: "" },
+    formData: { nome: "", telefone: "", email: "", descricao: "" },
     loading: false,
     error: null,
     savingChanges: false,
@@ -75,6 +73,49 @@ describe("ComercianteDetails Component", () => {
     expect(screen.getByText("Frutas frescas")).toBeInTheDocument();
   });
 
+  it("deve renderizar o email do comerciante", () => {
+    const mockComerciante = {
+      id: mockId,
+      nome: "João Frutas",
+      telefone: "1234",
+      email: "joao@frutas.com",
+      descricao: "Frutas frescas",
+    };
+    (useComerciante as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      comerciante: mockComerciante,
+    });
+
+    render(<ComercianteDetails comercianteId={mockId} />);
+
+    expect(screen.getByText("joao@frutas.com")).toBeInTheDocument();
+  });
+
+  it("deve renderizar o campo email no modal e permitir edição", () => {
+    (useComerciante as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      comerciante: { id: mockId, nome: "João", email: "joao@email.com" },
+      formData: {
+        ...defaultHookReturn.formData,
+        nome: "João",
+        email: "joao@email.com",
+      },
+    });
+
+    render(<ComercianteDetails comercianteId={mockId} />);
+
+    fireEvent.click(screen.getByText("Editar Dados"));
+
+    const emailInput = screen.getByLabelText(/Email/i);
+    expect(emailInput).toHaveValue("joao@email.com");
+
+    fireEvent.change(emailInput, { target: { value: "novo@email.com" } });
+    expect(mockHandleFormChange).toHaveBeenCalledWith(
+      "email",
+      "novo@email.com",
+    );
+  });
+
   it("deve abrir modal de edição ao clicar no botão Editar Dados", () => {
     (useComerciante as Mock).mockReturnValue({
       ...defaultHookReturn,
@@ -85,51 +126,6 @@ describe("ComercianteDetails Component", () => {
 
     fireEvent.click(screen.getByText("Editar Dados"));
     expect(screen.getByText("Editar Comerciante")).toBeInTheDocument();
-  });
-
-  it("deve gerenciar autorização de categorias (adicionar selecionados)", () => {
-    const mockAllCategories = [
-      { id: "cat-1", nome: "Hortaliças" },
-      { id: "cat-2", nome: "Frutas" },
-    ];
-    (useComerciante as Mock).mockReturnValue({
-      ...defaultHookReturn,
-      comerciante: { id: mockId, nome: "João" },
-      allCategories: mockAllCategories,
-      activeCategories: ["cat-1"],
-    });
-
-    render(<ComercianteDetails comercianteId={mockId} />);
-
-    expect(screen.getByText("Frutas")).toBeInTheDocument();
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]);
-
-    const addButton = screen.getByTitle("Adicionar selecionados");
-    fireEvent.click(addButton);
-
-    expect(mockSetActiveCategories).toHaveBeenCalledWith(["cat-1", "cat-2"]);
-  });
-
-  it("deve gerenciar autorização de categorias (remover selecionados)", () => {
-    const mockAllCategories = [{ id: "cat-1", nome: "Hortaliças" }];
-    (useComerciante as Mock).mockReturnValue({
-      ...defaultHookReturn,
-      comerciante: { id: mockId, nome: "João" },
-      allCategories: mockAllCategories,
-      activeCategories: ["cat-1"],
-    });
-
-    render(<ComercianteDetails comercianteId={mockId} />);
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]);
-
-    const removeButton = screen.getByTitle("Remover selecionados");
-    fireEvent.click(removeButton);
-
-    expect(mockSetActiveCategories).toHaveBeenCalledWith([]);
   });
 
   it("deve atualizar campos no modal de edição", () => {

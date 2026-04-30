@@ -34,10 +34,15 @@ export default function Header() {
           className="flex items-center gap-3 z-10 transition-all hover:scale-105"
         >
           <div className="flex items-center justify-center rounded-xl w-10 h-10 bg-white/15 p-2">
-            <Image src="/logo.png" alt="Logo EcoFeira" width={32} height={32} />
+            <Image
+              src="/logo.png"
+              alt="Logo Agro Feira"
+              width={32}
+              height={32}
+            />
           </div>
           <div className="text-white text-[18.4px] font-bold leading-[18.4px]">
-            EcoFeira
+            Agro Feira
           </div>
         </button>
 

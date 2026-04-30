@@ -4,7 +4,7 @@ import { useState } from "react";
 import { forgotPassword } from "@/features/auth/api/auth.service";
 
 export function useForgotPassword() {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export function useForgotPassword() {
     setLoading(true);
 
     try {
-      await forgotPassword(username);
+      await forgotPassword(identifier);
       setSuccess(true);
     } catch (err: unknown) {
       setError(
@@ -28,8 +28,8 @@ export function useForgotPassword() {
   }
 
   return {
-    username,
-    setUsername,
+    identifier,
+    setIdentifier,
     error,
     success,
     loading,

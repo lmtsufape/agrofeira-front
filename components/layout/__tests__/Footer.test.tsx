@@ -13,7 +13,7 @@ describe("Footer", () => {
   it("deve conter o texto da associação", () => {
     render(<Footer />);
     expect(
-      screen.getByText(/EcoFeira · Associação Agroecológica/i),
+      screen.getByText(/Agro Feira · Associação Agroecológica/i),
     ).toBeInTheDocument();
   });
 

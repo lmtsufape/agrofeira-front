@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import {
   LucideIcon,
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
+  Search,
 } from "lucide-react";
 import { Panel, type TransferItem } from "./TransferPanel";
 
@@ -44,12 +46,23 @@ export function TransferList({
   onMoveAllToRight,
   loading,
 }: Readonly<TransferListProps>) {
+  const [leftSearch, setLeftSearch] = useState("");
+  const [rightSearch, setRightSearch] = useState("");
+
   const btnBase =
     "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 active:scale-95 shadow-sm";
   const btnSolid =
     "bg-gradient-to-br from-[#003d04] to-[#1b6112] text-white hover:shadow-md";
   const btnOutline =
     "bg-[#003d041f] border border-[#003d0433] text-[#003d04] hover:bg-[#003d04] hover:text-white";
+
+  const filteredLeft = leftItems.filter((item) =>
+    item.label.toLowerCase().includes(leftSearch.toLowerCase()),
+  );
+
+  const filteredRight = rightItems.filter((item) =>
+    item.label.toLowerCase().includes(rightSearch.toLowerCase()),
+  );
 
   return (
     <div className="rounded-2xl p-5 md:p-6 bg-white shadow-[0_2px_16px_rgba(0,61,4,0.07),0_0_0_1px_rgba(0,61,4,0.06)]">
@@ -78,8 +91,24 @@ export function TransferList({
               {leftItems.length}
             </span>
           </div>
+
+          {/* Busca Esquerda */}
+          <div className="relative mb-2">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8aaa8d]"
+            />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={leftSearch}
+              onChange={(e) => setLeftSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#eef5ee] text-xs outline-none focus:border-[#5bc48b] focus:ring-1 focus:ring-[#5bc48b] transition-all bg-[#fcfdfc]"
+            />
+          </div>
+
           <Panel
-            items={leftItems}
+            items={filteredLeft}
             selected={leftSelected}
             onSelect={onLeftSelect}
             gradient="bg-gradient-to-br from-[#003d04] to-[#1b6112]"
@@ -129,8 +158,24 @@ export function TransferList({
               {rightItems.length}
             </span>
           </div>
+
+          {/* Busca Direita */}
+          <div className="relative mb-2">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8aaa8d]"
+            />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={rightSearch}
+              onChange={(e) => setRightSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#eef5ee] text-xs outline-none focus:border-[#5bc48b] focus:ring-1 focus:ring-[#5bc48b] transition-all bg-[#fcfdfc]"
+            />
+          </div>
+
           <Panel
-            items={rightItems}
+            items={filteredRight}
             selected={rightSelected}
             onSelect={onRightSelect}
             gradient="bg-gradient-to-br from-[#1b6112] to-[#3d9428]"

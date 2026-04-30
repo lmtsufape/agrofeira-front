@@ -50,7 +50,7 @@ export default function NotFound() {
 
       {/* Marca d'água ou rodapé simples */}
       <div className="absolute bottom-8 text-[11px] font-medium text-[#aacaad] uppercase tracking-[0.2em]">
-        EcoFeira · Plataforma Agroecológica
+        Agro Feira · Plataforma Agroecológica
       </div>
     </div>
   );

@@ -25,7 +25,6 @@ export function RepassesComerciantes() {
       setIsLoading(true);
       setError(null);
       try {
-        console.log("Carregando lista de repasses...");
         const mesAtual = new Date().getMonth() + 1;
         const anoAtual = new Date().getFullYear();
         const dados = await pagamentosService.listarRepasses(
@@ -33,7 +32,6 @@ export function RepassesComerciantes() {
           anoAtual,
         );
         setRepasses(dados);
-        console.log("Repasses carregados:", dados);
       } catch (err) {
         console.error("Erro ao carregar repasses:", err);
         const errorMessage =

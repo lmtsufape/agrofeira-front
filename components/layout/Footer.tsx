@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="flex justify-start items-center gap-2">
         <LeafIcon size={16} color="#8b968c" />
         <div className="text-[#8b968c] text-[12px] font-normal leading-[18px]">
-          © {currentYear} EcoFeira · Associação Agroecológica
+          © {currentYear} Agro Feira · Associação Agroecológica
         </div>
       </div>
 

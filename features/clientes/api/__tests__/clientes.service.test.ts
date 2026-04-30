@@ -14,54 +14,40 @@ describe("clienteService", () => {
   it("deve chamar o endpoint correto para listar todos", async () => {
     (apiClient as Mock).mockResolvedValue([]);
     await clienteService.getAll();
-    expect(apiClient).toHaveBeenCalledWith("/api/clientes");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/clientes", {});
   });
 
   it("deve chamar o endpoint correto para buscar por ID", async () => {
     (apiClient as Mock).mockResolvedValue({});
     await clienteService.getById("123");
-    expect(apiClient).toHaveBeenCalledWith("/api/clientes/123");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/clientes/123", {});
   });
 
-  it("deve chamar o endpoint correto para criar", async () => {
+  it("deve chamar o endpoint correto para criar um cliente", async () => {
     (apiClient as Mock).mockResolvedValue({});
-    const novoCliente = {
-      nome: "Teste",
-      email: "teste@email.com",
-      telefone: "123",
-      cpf: "123",
-    };
-    await clienteService.create(novoCliente);
-    expect(apiClient).toHaveBeenCalledWith(
-      "/api/clientes",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify(novoCliente),
-      }),
-    );
+    const newCliente = { nome: "João", email: "j@j.com" };
+    await clienteService.create(newCliente);
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/clientes", {
+      method: "POST",
+      body: JSON.stringify(newCliente),
+    });
   });
 
-  it("deve chamar o endpoint correto para atualizar", async () => {
+  it("deve chamar o endpoint correto para atualizar um cliente", async () => {
     (apiClient as Mock).mockResolvedValue({});
-    const dados = { nome: "Atualizado" };
-    await clienteService.update("123", dados);
-    expect(apiClient).toHaveBeenCalledWith(
-      "/api/clientes/123",
-      expect.objectContaining({
-        method: "PUT",
-        body: JSON.stringify(dados),
-      }),
-    );
+    const updateData = { nome: "João Silva" };
+    await clienteService.update("123", updateData);
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/clientes/123", {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    });
   });
 
-  it("deve chamar o endpoint correto para deletar", async () => {
-    (apiClient as Mock).mockResolvedValue({});
+  it("deve chamar o endpoint correto para deletar um cliente", async () => {
+    (apiClient as Mock).mockResolvedValue(undefined);
     await clienteService.delete("123");
-    expect(apiClient).toHaveBeenCalledWith(
-      "/api/clientes/123",
-      expect.objectContaining({
-        method: "DELETE",
-      }),
-    );
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/clientes/123", {
+      method: "DELETE",
+    });
   });
 });
