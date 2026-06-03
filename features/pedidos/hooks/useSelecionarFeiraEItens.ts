@@ -1,67 +1,95 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useMemo } from "react";
+import useSWR from "swr";
+import { apiClient } from "@/lib/api-client";
+import { type Page } from "@/types/api";
 
 export interface Feira {
   id: string;
   dataHora: string;
-  local: string;
   status: string;
 }
 
-export interface ItemPedido {
+export interface ItemDisponivel {
   id: string;
   nome: string;
   unidadeMedida: string;
+  precoBase: number;
+  quantidadeDisponivel: number;
   quantidade: number;
 }
 
-const MOCK_FEIRAS: Feira[] = [
-  {
-    id: "feira-1",
-    dataHora: "2026-04-15",
-    local: "Garanhuns - PE",
-    status: "ABERTA_PEDIDOS",
-  },
-  {
-    id: "feira-2",
-    dataHora: "2026-04-22",
-    local: "Recife - PE",
-    status: "ABERTA_PEDIDOS",
-  },
-  {
-    id: "feira-3",
-    dataHora: "2026-04-29",
-    local: "Caruaru - PE",
-    status: "ABERTA_OFERTAS",
-  },
-  {
-    id: "feira-4",
-    dataHora: "2026-05-06",
-    local: "Garanhuns - PE",
-    status: "ABERTA_PEDIDOS",
-  },
-];
+interface RawFeira {
+  id: string;
+  dataHora: string;
+  status: string;
+  ativa: boolean;
+}
 
-const MOCK_ITENS: ItemPedido[] = [
-  {
-    id: "1",
-    nome: "Tomate Orgânico",
-    unidadeMedida: "Unidade / Kg",
-    quantidade: 0,
-  },
-  { id: "2", nome: "Alface Crespa", unidadeMedida: "Maço", quantidade: 0 },
-  { id: "3", nome: "Cenoura Fresca", unidadeMedida: "Maço", quantidade: 0 },
-  { id: "4", nome: "Cebola Roxa", unidadeMedida: "Rede / Kg", quantidade: 0 },
-  { id: "5", nome: "Batata Doce", unidadeMedida: "Bandeja", quantidade: 0 },
-  { id: "6", nome: "Pimentão Verde", unidadeMedida: "Bandeja", quantidade: 0 },
-  { id: "7", nome: "Cheiro Verde", unidadeMedida: "Maço", quantidade: 0 },
-  { id: "8", nome: "Mandioca", unidadeMedida: "Pacote / Kg", quantidade: 0 },
-];
+interface RawOferta {
+  id: string;
+  produto: {
+    id: string;
+    nome: string;
+    unidadeMedida: string;
+    precoBase: number;
+  };
+  quantidadeDisponivel: number;
+}
 
 export function useSelecionarFeiraEItens() {
-  const [feiras] = useState<Feira[]>(MOCK_FEIRAS);
   const [selectedFeira, setSelectedFeira] = useState<Feira | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itens, setItens] = useState<ItemPedido[]>(MOCK_ITENS);
+  const [quantidades, setQuantidades] = useState<Record<string, number>>({});
+
+  const { data: feirasPage, isLoading: loadingFeiras } = useSWR(
+    "/api/v1/feiras?size=100",
+    () => apiClient<Page<RawFeira>>("/api/v1/feiras?size=100"),
+    { revalidateOnFocus: false },
+  );
+
+  const { data: ofertasData } = useSWR(
+    selectedFeira ? `/api/v1/estoque-bancas/feira/${selectedFeira.id}` : null,
+    () =>
+      apiClient<RawOferta[]>(
+        `/api/v1/estoque-bancas/feira/${selectedFeira!.id}`,
+      ),
+    { revalidateOnFocus: false },
+  );
+
+  const feiras: Feira[] = useMemo(
+    () =>
+      (feirasPage?.content ?? []).map((f) => ({
+        id: String(f.id),
+        dataHora: String(f.dataHora),
+        status: f.status,
+      })),
+    [feirasPage],
+  );
+
+  const itens: ItemDisponivel[] = useMemo(() => {
+    if (!ofertasData) return [];
+    const map = new Map<string, ItemDisponivel>();
+    for (const oferta of ofertasData) {
+      const { id, nome, unidadeMedida, precoBase } = oferta.produto;
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          nome,
+          unidadeMedida,
+          precoBase: Number(precoBase),
+          quantidadeDisponivel: Number(oferta.quantidadeDisponivel),
+          quantidade: quantidades[id] ?? 0,
+        });
+      } else {
+        map.get(id)!.quantidadeDisponivel += Number(
+          oferta.quantidadeDisponivel,
+        );
+      }
+    }
+    return Array.from(map.values());
+  }, [ofertasData, quantidades]);
 
   const feirasFiltradasPorPesquisa = feiras.filter((feira) =>
     new Date(feira.dataHora).toLocaleDateString("pt-BR").includes(searchTerm),
@@ -70,13 +98,12 @@ export function useSelecionarFeiraEItens() {
   const itensSelecionados = itens.filter((item) => item.quantidade > 0);
 
   const handleQuantidadeChange = (id: string, delta: number) => {
-    setItens((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantidade: Math.max(0, item.quantidade + delta) }
-          : item,
-      ),
-    );
+    setQuantidades((prev) => {
+      const current = prev[id] ?? 0;
+      const item = itens.find((i) => i.id === id);
+      const max = item?.quantidadeDisponivel ?? Infinity;
+      return { ...prev, [id]: Math.min(max, Math.max(0, current + delta)) };
+    });
   };
 
   return {
@@ -89,5 +116,6 @@ export function useSelecionarFeiraEItens() {
     itens,
     itensSelecionados,
     handleQuantidadeChange,
+    loading: loadingFeiras,
   };
 }

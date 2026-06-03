@@ -1,98 +1,70 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import FeiraDetalhamentoVisaoGeral from "../page";
+import FeiraVisaoGeralPage from "../page";
 import { useVisaoGeralFeira } from "@/features/feiras/hooks/useVisaoGeralFeira";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useSearchParams } from "next/navigation";
 
 vi.mock("@/features/feiras/hooks/useVisaoGeralFeira");
 vi.mock("next/navigation");
-vi.mock("@/features/auth/contexts/AuthContext");
 
-describe("FeiraDetalhamentoVisaoGeral", () => {
-  const mockPush = vi.fn();
+describe("FeiraVisaoGeralPage", () => {
   const mockSearchParams = new URLSearchParams({ feiraId: "123" });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as Mock).mockReturnValue({ push: mockPush });
     (useSearchParams as Mock).mockReturnValue(mockSearchParams);
-    (useAuth as Mock).mockReturnValue({ token: "test-token" });
   });
 
-  it("deve exibir loader enquanto estiver carregando", () => {
+  it("deve exibir loader enquanto carrega", () => {
     (useVisaoGeralFeira as Mock).mockReturnValue({
-      resumo: null,
+      detalhes: null,
       loading: true,
       erro: null,
     });
 
-    const { container } = render(<FeiraDetalhamentoVisaoGeral />);
+    const { container } = render(<FeiraVisaoGeralPage />);
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
-  it("deve exibir mensagem de erro se o resumo for nulo após carregar", () => {
+  it("deve exibir erro quando a API falha", () => {
     (useVisaoGeralFeira as Mock).mockReturnValue({
-      resumo: null,
+      detalhes: null,
       loading: false,
-      erro: "Falha na API",
+      erro: "Não foi possível carregar os detalhes da feira.",
     });
 
-    render(<FeiraDetalhamentoVisaoGeral />);
+    render(<FeiraVisaoGeralPage />);
     expect(
-      screen.getByText("Erro ao carregar dados do resumo."),
+      screen.getByText("Não foi possível carregar os detalhes da feira."),
     ).toBeInTheDocument();
   });
 
-  it("deve renderizar as tabelas de resumo em caso de sucesso", () => {
-    const mockResumo = {
-      dataFeira: "25/12/2024",
-      localidade: "Centro",
-      items: [{ id: "1", nome: "Tomate" }],
-      comerciantes: [{ id: "1", nome: "João" }],
-      clientes: [{ id: "1", nome: "Maria" }],
+  it("deve renderizar métricas em caso de sucesso", () => {
+    const mockDetalhes = {
+      id: "123",
+      dataHora: "2025-05-01T08:00:00",
+      status: "FINALIZADA",
+      totalPedidos: 10,
+      totalComerciantes: 3,
+      totalProdutos: 5,
+      valorTotalPedidos: 500,
+      valorTotalProdutos: 400,
+      totalTaxasEntrega: 70,
+      pedidosPorStatus: { ENTREGUE: 8, CANCELADO: 2 },
+      totalRateado: 400,
     };
 
     (useVisaoGeralFeira as Mock).mockReturnValue({
-      resumo: mockResumo,
+      detalhes: mockDetalhes,
       loading: false,
       erro: null,
     });
 
-    render(<FeiraDetalhamentoVisaoGeral />);
+    render(<FeiraVisaoGeralPage />);
 
-    expect(screen.getByText(/Visão Geral/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Detalhes da feira realizada em 25\/12\/2024 - Centro/i),
-    ).toBeInTheDocument();
-
-    expect(screen.getByText("Tomate")).toBeInTheDocument();
-    expect(screen.getByText("João")).toBeInTheDocument();
-    expect(screen.getByText("Maria")).toBeInTheDocument();
-  });
-
-  it("deve navegar para o detalhamento específico ao clicar em detalhar", () => {
-    const mockResumo = {
-      dataFeira: "25/12/2024",
-      localidade: "Centro",
-      items: [{ id: "1", nome: "Tomate" }],
-      comerciantes: [],
-      clientes: [],
-    };
-
-    (useVisaoGeralFeira as Mock).mockReturnValue({
-      resumo: mockResumo,
-      loading: false,
-      erro: null,
-    });
-
-    render(<FeiraDetalhamentoVisaoGeral />);
-
-    const detailButtons = screen.getAllByText("Detalhar");
-    fireEvent.click(detailButtons[0]);
-
-    expect(mockPush).toHaveBeenCalledWith(
-      "/feiras/detalhamento/item-comerciante?feiraId=123",
-    );
+    expect(screen.getByText("Visão Geral")).toBeInTheDocument();
+    expect(screen.getByText("10")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
   });
 });

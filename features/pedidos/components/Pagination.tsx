@@ -9,6 +9,7 @@ interface PaginationProps {
   startIndex: number;
   itemsPerPage: number;
   totalCount: number;
+  itemLabel?: string;
 }
 
 export function Pagination({
@@ -18,6 +19,7 @@ export function Pagination({
   startIndex,
   itemsPerPage,
   totalCount,
+  itemLabel = "pedidos",
 }: Readonly<PaginationProps>) {
   if (totalCount === 0) return null;
 
@@ -28,7 +30,7 @@ export function Pagination({
         <span className="text-[#1A3D1F]">
           {Math.min(startIndex + itemsPerPage, totalCount)}
         </span>{" "}
-        de <span className="text-[#1A3D1F]">{totalCount}</span> pedidos
+        de <span className="text-[#1A3D1F]">{totalCount}</span> {itemLabel}
       </p>
 
       <div className="flex items-center gap-1">

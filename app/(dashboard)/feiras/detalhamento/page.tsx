@@ -18,6 +18,7 @@ function DetalhamentoFeiraContent() {
       <PageHeader
         title="Detalhamento Feira"
         subtitle="Escolha uma visão de detalhamento para a feira selecionada"
+        backHref="/feiras"
       />
 
       {/* Banner info */}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { clienteService } from "@/features/clientes/api/clientes.service";
 import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
@@ -9,45 +11,6 @@ interface Participante {
   telefone?: string | null;
 }
 
-const MOCK_PARTICIPANTES: Participante[] = [
-  {
-    id: "cliente-1",
-    nome: "João da Silva",
-    tipo: "cliente",
-    telefone: "(11) 98765-4321",
-  },
-  {
-    id: "cliente-2",
-    nome: "Maria José Jacinto",
-    tipo: "cliente",
-    telefone: "(11) 98765-4322",
-  },
-  {
-    id: "cliente-3",
-    nome: "Zé Maria da Silva",
-    tipo: "cliente",
-    telefone: "(11) 98765-4323",
-  },
-  {
-    id: "comerciante-1",
-    nome: "Alisson Manoel",
-    tipo: "comerciante",
-    telefone: "(11) 98765-4324",
-  },
-  {
-    id: "comerciante-2",
-    nome: "Pedro Paulo Santos",
-    tipo: "comerciante",
-    telefone: "(11) 98765-4325",
-  },
-  {
-    id: "comerciante-3",
-    nome: "Ana Carolina Ribeiro",
-    tipo: "comerciante",
-    telefone: "(11) 98765-4326",
-  },
-];
-
 export function useSelecionarParticipante() {
   const [participantes, setParticipantes] = useState<Participante[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,6 +21,7 @@ export function useSelecionarParticipante() {
 
   const fetchParticipantes = useCallback(async () => {
     try {
+      setError(null);
       const [clientesPage, comerciantesPage] = await Promise.all([
         clienteService.getAll(),
         comercianteService.getAll(),
@@ -79,20 +43,17 @@ export function useSelecionarParticipante() {
       ];
 
       setParticipantes(participantesData);
-      setError(null);
     } catch {
-      setParticipantes(MOCK_PARTICIPANTES);
-      setError(null);
+      setError("Não foi possível carregar os participantes. Tente novamente.");
+      setParticipantes([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchParticipantes();
-    };
-    init();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchParticipantes();
   }, [fetchParticipantes]);
 
   const filteredParticipantes = useMemo(() => {
@@ -110,5 +71,6 @@ export function useSelecionarParticipante() {
     setSelectedParticipante,
     loading,
     error,
+    retry: fetchParticipantes,
   };
 }

@@ -1,99 +1,79 @@
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import { pagamentosService } from "../pagamentos.service";
 import { apiClient } from "@/lib/api-client";
-import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
 
 vi.mock("@/lib/api-client");
-vi.mock("@/features/comerciantes/api/comerciantes.service");
+
+const mockPage = <T>(items: T[]) => ({
+  content: items,
+  totalElements: items.length,
+  totalPages: 1,
+  number: 0,
+});
 
 describe("pagamentosService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("Relatórios", () => {
-    it("deve listar relatorios por mes", async () => {
-      (apiClient as Mock).mockResolvedValueOnce([]);
-      await pagamentosService.listarRelatoriosPorMes(2026);
-      expect(apiClient).toHaveBeenCalledWith(
-        "/api/relatorios/por-mes?ano=2026",
-      );
-    });
+  describe("listarRelatorios", () => {
+    it("deve chamar o endpoint correto e retornar o content da página", async () => {
+      const mockRelatorios = [{ id: "1", titulo: "Relatório Junho" }];
+      (apiClient as Mock).mockResolvedValueOnce(mockPage(mockRelatorios));
 
-    it("deve listar relatorios por comerciante e mes", async () => {
-      (apiClient as Mock).mockResolvedValueOnce([]);
-      await pagamentosService.listarRelatoriosPorComercianteMes("c1", 2026, 4);
-      expect(apiClient).toHaveBeenCalledWith(
-        "/api/relatorios/por-comerciante/mes?comercianteId=c1&ano=2026&mes=4",
-      );
-    });
+      const result = await pagamentosService.listarRelatorios();
 
-    it("deve listar relatorios por comerciante e ano", async () => {
-      (apiClient as Mock).mockResolvedValueOnce([]);
-      await pagamentosService.listarRelatoriosPorComercianteAno("c1", 2026);
-      expect(apiClient).toHaveBeenCalledWith(
-        "/api/relatorios/por-comerciante/ano?comercianteId=c1&ano=2026",
-      );
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/relatorios");
+      expect(result).toEqual(mockRelatorios);
     });
   });
 
-  describe("Repasses", () => {
-    it("deve listar repasses sem parametros", async () => {
-      (apiClient as Mock).mockResolvedValueOnce([]);
-      await pagamentosService.listarRepasses();
-      expect(apiClient).toHaveBeenCalledWith("/api/repasses");
-    });
+  describe("listarRepasses", () => {
+    it("deve chamar o endpoint correto e retornar o content da página", async () => {
+      const mockRepasses = [
+        { id: "r1", comerciante: { id: "c1", nome: "João" } },
+      ];
+      (apiClient as Mock).mockResolvedValueOnce(mockPage(mockRepasses));
 
-    it("deve listar repasses com mes e ano", async () => {
-      (apiClient as Mock).mockResolvedValueOnce([]);
-      await pagamentosService.listarRepasses(4, 2026);
-      expect(apiClient).toHaveBeenCalledWith("/api/repasses?mes=4&ano=2026");
-    });
+      const result = await pagamentosService.listarRepasses();
 
-    it("deve confirmar pagamento", async () => {
-      (apiClient as Mock).mockResolvedValueOnce({});
-      await pagamentosService.confirmarPagamento("c1");
-      expect(apiClient).toHaveBeenCalledWith(
-        "/api/repasses/comerciantes/c1/confirmar",
-        { method: "PUT" },
-      );
-    });
-
-    it("deve obter detalhes do repasse", async () => {
-      (apiClient as Mock).mockResolvedValueOnce({});
-      await pagamentosService.obterDetalhesRepasse("c1");
-      expect(apiClient).toHaveBeenCalledWith("/api/repasses/comerciantes/c1");
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/repasses");
+      expect(result).toEqual(mockRepasses);
     });
   });
 
-  describe("Composição", () => {
-    it("deve compor detalhes do pagamento (comerciante + repasse)", async () => {
-      const mockComerciante = { id: "c1", nome: "Comerciante 1" };
-      const mockRepasse = { id: "r1", valor: 100 };
+  describe("listarRepassesPorComerciante", () => {
+    it("deve chamar o endpoint correto com o id do comerciante", async () => {
+      (apiClient as Mock).mockResolvedValueOnce([]);
 
-      (comercianteService.getById as Mock).mockResolvedValueOnce(
-        mockComerciante,
-      );
-      (apiClient as Mock).mockResolvedValueOnce(mockRepasse);
+      await pagamentosService.listarRepassesPorComerciante("c1");
+
+      expect(apiClient).toHaveBeenCalledWith("/api/v1/repasses/comerciante/c1");
+    });
+  });
+
+  describe("obterPagamentoDetalhes", () => {
+    it("deve retornar o primeiro repasse do comerciante", async () => {
+      const mockRepasse = {
+        id: "r1",
+        comerciante: { id: "c1", nome: "João", email: null, telefone: null },
+        valorBruto: 100,
+        valorLiquido: 100,
+        status: "PAGO",
+      };
+      (apiClient as Mock).mockResolvedValueOnce([mockRepasse]);
 
       const resultado = await pagamentosService.obterPagamentoDetalhes("c1");
 
-      expect(resultado).toEqual({
-        comerciante: mockComerciante,
-        repasse: mockRepasse,
-      });
-      expect(comercianteService.getById).toHaveBeenCalledWith("c1");
-      expect(apiClient).toHaveBeenCalledWith("/api/repasses/comerciantes/c1");
+      expect(resultado).toEqual({ repasse: mockRepasse });
     });
 
-    it("deve propagar erro se uma das chamadas falhar", async () => {
-      (comercianteService.getById as Mock).mockRejectedValueOnce(
-        new Error("Erro Comerciante"),
-      );
+    it("deve lançar erro se nenhum repasse for encontrado", async () => {
+      (apiClient as Mock).mockResolvedValueOnce([]);
 
       await expect(
         pagamentosService.obterPagamentoDetalhes("c1"),
-      ).rejects.toThrow("Erro Comerciante");
+      ).rejects.toThrow("Nenhum repasse encontrado para este comerciante");
     });
   });
 });

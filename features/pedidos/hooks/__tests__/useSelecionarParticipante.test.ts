@@ -51,7 +51,7 @@ describe("useSelecionarParticipante", () => {
     );
   });
 
-  it("deve usar dados mock em caso de erro na API", async () => {
+  it("deve exibir erro quando a API falha", async () => {
     (clienteService.getAll as Mock).mockRejectedValue(new Error("API Fail"));
     (comercianteService.getAll as Mock).mockRejectedValue(
       new Error("API Fail"),
@@ -63,9 +63,8 @@ describe("useSelecionarParticipante", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // MOCK_PARTICIPANTES tem 6 itens
-    expect(result.current.participantes.length).toBeGreaterThan(0);
-    expect(result.current.error).toBe(null); // O hook silencia o erro usando mock
+    expect(result.current.participantes).toHaveLength(0);
+    expect(result.current.error).not.toBe(null);
   });
 
   it("deve filtrar participantes pelo termo de busca", async () => {

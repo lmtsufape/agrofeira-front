@@ -12,7 +12,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("../../api/pagamentos.service", () => ({
   pagamentosService: {
     obterPagamentoDetalhes: vi.fn(),
-    confirmarPagamento: vi.fn(),
   },
 }));
 
@@ -22,19 +21,21 @@ describe("RepasseDetalhes", () => {
   const mockId = "comerciante-123";
 
   const mockDados = {
-    comerciante: {
-      id: mockId,
-      nome: "João do Queijo",
-      telefone: "1199999999",
-      email: "joao@queijo.com",
-    },
     repasse: {
       id: "rep-1",
-      valor: 550.5,
-      status: "PENDENTE",
-      mes: 4,
-      ano: 2026,
-      comercianteId: mockId,
+      rateioResultadoId: "rat-1",
+      comerciante: {
+        id: mockId,
+        nome: "João do Queijo",
+        telefone: "1199999999",
+        email: "joao@queijo.com",
+      },
+      feiraId: "feira-1",
+      valorBruto: 550.5,
+      valorLiquido: 550.5,
+      status: "PAGO",
+      repassadoEm: null,
+      criadoEm: "2026-06-01T00:00:00",
     },
   };
 
@@ -57,7 +58,7 @@ describe("RepasseDetalhes", () => {
     await waitFor(() => {
       expect(screen.getByText("João do Queijo")).toBeInTheDocument();
       expect(screen.getByText("550,50")).toBeInTheDocument();
-      expect(screen.getByText("Status: Pendente")).toBeInTheDocument();
+      expect(screen.getByText("Status: Pago")).toBeInTheDocument();
     });
   });
 
@@ -73,72 +74,16 @@ describe("RepasseDetalhes", () => {
     });
   });
 
-  it("deve confirmar pagamento com sucesso", async () => {
-    (pagamentosService.confirmarPagamento as Mock).mockResolvedValueOnce({});
-
-    render(<RepasseDetalhes />);
-
-    await waitFor(() => {
-      expect(screen.getByText("João do Queijo")).toBeInTheDocument();
-    });
-
-    const confirmBtn = screen.getByText("Confirmar Pagamento");
-    fireEvent.click(confirmBtn);
-
-    expect(screen.getByText("Processando...")).toBeInTheDocument();
-
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText("Pagamento confirmado com sucesso!"),
-        ).toBeInTheDocument();
-      },
-      { timeout: 2000 },
-    );
-
-    // Espera o redirecionamento (setTimeout de 1.5s no componente)
-    await waitFor(
-      () => {
-        expect(mockPush).toHaveBeenCalledWith("/pagamentos/repasses");
-      },
-      { timeout: 3000 },
-    );
-  });
-
-  it("deve lidar com erro na confirmação do pagamento", async () => {
-    (pagamentosService.confirmarPagamento as Mock).mockRejectedValueOnce(
-      new Error("Erro ao confirmar"),
-    );
-
-    render(<RepasseDetalhes />);
-
-    await waitFor(() => {
-      expect(screen.getByText("João do Queijo")).toBeInTheDocument();
-    });
-
-    const confirmBtn = screen.getByText("Confirmar Pagamento");
-    fireEvent.click(confirmBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText("Erro ao confirmar")).toBeInTheDocument();
-    });
-  });
-
   it("deve desabilitar botão se o repasse já estiver pago", async () => {
-    (pagamentosService.obterPagamentoDetalhes as Mock).mockResolvedValue({
-      ...mockDados,
-      repasse: { ...mockDados.repasse, status: "PAGO" },
-    });
-
     render(<RepasseDetalhes />);
 
     await waitFor(() => {
       const btn = screen.getByText("Já Foi Pago");
-      expect(btn).toBeDisabled();
+      expect(btn.closest("button")).toBeDisabled();
     });
   });
 
-  it("deve voltar ao clicar no botão de cancelar ou voltar", async () => {
+  it("deve voltar ao clicar no botão de cancelar", async () => {
     render(<RepasseDetalhes />);
 
     await waitFor(() => {

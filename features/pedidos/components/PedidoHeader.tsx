@@ -1,7 +1,8 @@
 "use client";
 
-import { Printer } from "lucide-react";
-import { getStatusColor } from "@/utils/status";
+import { useRouter } from "next/navigation";
+import { Printer, ArrowLeft } from "lucide-react";
+import { getStatusColor, getStatusLabel } from "@/utils/status";
 
 interface PedidoHeaderProps {
   status: string;
@@ -9,18 +10,19 @@ interface PedidoHeaderProps {
 }
 
 export function PedidoHeader({ status, onPrint }: Readonly<PedidoHeaderProps>) {
+  const router = useRouter();
   const colors = getStatusColor(status);
-
-  // O Tailwind v4 com JIT permite interpolação indireta se os hexadecimais de colors estiverem em safe-list,
-  // Mas como retornamos hexadecimais crus de `getStatusColor`, injetaremos via variável CSS de estilo ou classes montadas pelo formatter.
-  // Já que só precisamos remover o objeto 'style' literal que suja o React.
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-[#EEF5EE]">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-white shadow-sm border border-[#003D041a] rounded-xl flex items-center justify-center">
-          <div className="w-1.5 h-6 bg-[#003D04] rounded-full" />
-        </div>
+        <button
+          onClick={() => router.push("/pedidos")}
+          className="w-9 h-9 bg-white shadow-sm border border-[#003D041a] rounded-xl flex items-center justify-center hover:bg-[#f6faf4] transition-colors print:hidden"
+          title="Voltar para pedidos"
+        >
+          <ArrowLeft size={16} className="text-[#003D04]" />
+        </button>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-bold text-[#1A3D1F]">
             Detalhes do Pedido
@@ -28,7 +30,7 @@ export function PedidoHeader({ status, onPrint }: Readonly<PedidoHeaderProps>) {
           <span
             className={`px-3 py-0.5 rounded-full text-[0.7rem] font-bold uppercase tracking-wide border ${colors.bg} ${colors.border} ${colors.text}`}
           >
-            {status}
+            {getStatusLabel(status)}
           </span>
         </div>
       </div>

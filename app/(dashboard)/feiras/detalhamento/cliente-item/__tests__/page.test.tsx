@@ -2,10 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import ClienteItemPage from "../page";
 import { useDetalhamentoCliente } from "@/features/feiras/hooks/useDetalhamentoCliente";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 vi.mock("@/features/feiras/hooks/useDetalhamentoCliente");
-vi.mock("@/features/auth/contexts/AuthContext");
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams({ feiraId: "123" }),
   useRouter: vi.fn(() => ({
@@ -25,7 +23,6 @@ vi.mock("@/features/feiras/components/ItemTable", () => ({
 describe("ClienteItemPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuth as Mock).mockReturnValue({ token: "test-token" });
   });
 
   it("deve mostrar estado vazio se nenhum cliente estiver selecionado", () => {

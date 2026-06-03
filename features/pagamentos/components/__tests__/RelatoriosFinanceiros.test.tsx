@@ -10,7 +10,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("../../api/pagamentos.service", () => ({
   pagamentosService: {
-    listarRelatoriosPorMes: vi.fn(),
+    listarRelatorios: vi.fn(),
+    relatorioMensal: vi.fn().mockResolvedValue([]),
+    relatorioGeralPorComerciante: vi.fn().mockResolvedValue([]),
+    listarFeiras: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -31,117 +34,79 @@ vi.mock("recharts", () => ({
 
 describe("RelatoriosFinanceiros", () => {
   const mockPush = vi.fn();
-  const mockRelatorios = [
-    {
-      id: "1",
-      titulo: "Relatório Jan 2026",
-      mes: "1",
-      ano: 2026,
-      valor: 1000,
-      status: "OK",
-    },
-    {
-      id: "2",
-      titulo: "Relatório Fev 2026",
-      mes: "2",
-      ano: 2026,
-      valor: 2000,
-      status: "OK",
-    },
-  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as Mock).mockReturnValue({ push: mockPush });
-    (pagamentosService.listarRelatoriosPorMes as Mock).mockResolvedValue(
-      mockRelatorios,
+    (pagamentosService.relatorioMensal as Mock).mockResolvedValue([]);
+    (pagamentosService.relatorioGeralPorComerciante as Mock).mockResolvedValue(
+      [],
     );
+    (pagamentosService.listarFeiras as Mock).mockResolvedValue([]);
   });
 
-  it("deve carregar e exibir relatórios ao montar", async () => {
-    render(<RelatoriosFinanceiros />);
-
-    await waitFor(() => {
-      // O título principal deve conter o nome do relatório
-      const heading = screen.getByRole("heading", { level: 2 });
-      expect(heading).toHaveTextContent("Relatório Jan 2026");
-    });
-
-    expect(pagamentosService.listarRelatoriosPorMes).toHaveBeenCalled();
-  });
-
-  it("deve exibir mensagem de erro se a API falhar", async () => {
-    (pagamentosService.listarRelatoriosPorMes as Mock).mockRejectedValueOnce(
-      new Error("Erro API"),
-    );
-
+  it("deve renderizar os títulos das seções ao montar", async () => {
     render(<RelatoriosFinanceiros />);
 
     await waitFor(() => {
       expect(
-        screen.getByText("Erro ao carregar relatórios"),
+        screen.getByText("Evolução Mensal de Faturamento"),
       ).toBeInTheDocument();
+    });
+
+    expect(pagamentosService.relatorioMensal).toHaveBeenCalled();
+  });
+
+  it("deve exibir mensagem de erro se a API falhar", async () => {
+    (pagamentosService.relatorioMensal as Mock).mockRejectedValueOnce(
+      new Error("Erro ao carregar dados"),
+    );
+
+    render(<RelatoriosFinanceiros />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Erro ao carregar dados")).toBeInTheDocument();
     });
   });
 
   it("deve atualizar dados ao clicar no botão atualizar", async () => {
     render(<RelatoriosFinanceiros />);
 
-    // Espera o carregamento inicial
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
-        "Relatório Jan 2026",
-      );
+      expect(
+        screen.getByText("Evolução Mensal de Faturamento"),
+      ).toBeInTheDocument();
     });
 
-    const updateBtn = screen.getByText("Atualizar Dados");
+    const updateBtn = screen.getByText("Atualizar");
     fireEvent.click(updateBtn);
 
     await waitFor(() => {
-      // 1 vez no useEffect inicial + 1 vez no clique
-      expect(pagamentosService.listarRelatoriosPorMes).toHaveBeenCalledTimes(2);
+      expect(pagamentosService.relatorioMensal).toHaveBeenCalledTimes(2);
     });
   });
 
-  it("deve mudar o relatório selecionado no dropdown", async () => {
-    render(<RelatoriosFinanceiros />);
-
-    // Espera o carregamento inicial
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
-        "Relatório Jan 2026",
-      );
-    });
-
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "2" } });
-
-    await waitFor(
-      () => {
-        const heading = screen.getByRole("heading", { level: 2 });
-        expect(heading).toHaveTextContent("Relatório Fev 2026");
-      },
-      { timeout: 2000 },
-    );
-  });
-
-  it("deve desabilitar o dropdown e mostrar mensagem correta quando não houver relatórios", async () => {
-    (pagamentosService.listarRelatoriosPorMes as Mock).mockResolvedValueOnce(
-      [],
-    );
-
+  it("deve exibir a opção padrão no seletor de feira quando não há feiras", async () => {
     render(<RelatoriosFinanceiros />);
 
     await waitFor(() => {
       const select = screen.getByRole("combobox");
-      expect(select).toBeDisabled();
-      expect(screen.getByText("Carregando relatórios...")).toBeInTheDocument();
+      expect(select).toBeInTheDocument();
+      expect(screen.getByText("Selecionar feira...")).toBeInTheDocument();
     });
   });
 
-  it("deve navegar de volta para pagamentos", () => {
+  it("deve exibir mensagem de nenhum dado quando fair selecionada não tem dados", async () => {
     render(<RelatoriosFinanceiros />);
-    const backBtn = screen.getByRole("button", { name: "" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Nenhum dado para 2026")).toBeInTheDocument();
+    });
+  });
+
+  it("deve navegar de volta para pagamentos", async () => {
+    render(<RelatoriosFinanceiros />);
+    const backBtn = screen.getAllByRole("button")[0];
     fireEvent.click(backBtn);
     expect(mockPush).toHaveBeenCalledWith("/pagamentos");
   });

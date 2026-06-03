@@ -1,4 +1,4 @@
-import { Users, Package, User, BarChart2 } from "lucide-react";
+import { Users, Package, User, BarChart2, Scale } from "lucide-react";
 import { ActionCardData } from "@/components/ui/ActionCard";
 
 export const DETALHAMENTO_OPTIONS: ActionCardData[] = [
@@ -32,5 +32,12 @@ export const DETALHAMENTO_OPTIONS: ActionCardData[] = [
     description: "Painel completo com todos os dados da feira",
     accent: "#3d9428",
     href: "/feiras/detalhamento/visao-geral",
+  },
+  {
+    label: "Resultado do Rateio",
+    icon: Scale,
+    description: "Quanto cada feirante vendeu e deve receber",
+    accent: "#4a7a2e",
+    href: "/feiras/detalhamento/rateio",
   },
 ];

@@ -9,7 +9,7 @@ export default function CadastrarItemPage() {
       <PageHeader
         title="Cadastrar Item"
         subtitle="Insira as informações do novo produto"
-        backHref="/dashboard"
+        backHref="/feiras"
       />
 
       <ItemForm />

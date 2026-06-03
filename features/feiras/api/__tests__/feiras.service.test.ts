@@ -12,40 +12,67 @@ describe("feiraService", () => {
   it("getResumo deve chamar o endpoint correto", async () => {
     (apiClient as Mock).mockResolvedValue({ feiraId: "1" });
     await feiraService.getResumo("123");
-    expect(apiClient).toHaveBeenCalledWith("/api/feiras/123/resumo");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/feiras/123/resumo");
   });
 
   it("getEstoques deve chamar o endpoint correto", async () => {
     (apiClient as Mock).mockResolvedValue([]);
     await feiraService.getEstoques("123");
-    expect(apiClient).toHaveBeenCalledWith("/api/feiras/123/estoques");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/estoque-bancas/feira/123");
   });
 
   it("getItensAgrupados deve agrupar itens corretamente a partir do estoque flat", async () => {
     const mockRawData = [
       {
-        itemId: "i1",
-        itemNome: "Item 1",
-        comercianteId: "c1",
-        comercianteNome: "Com 1",
+        id: "o1",
+        feira: {
+          id: "f1",
+          dataHora: "2026-04-15",
+          status: "ABERTA",
+          ativa: true,
+        },
+        comerciante: { id: "c1", nome: "Com 1" },
+        produto: {
+          id: "i1",
+          nome: "Item 1",
+          unidadeMedida: "kg",
+          precoBase: 5,
+        },
         quantidadeDisponivel: 10,
-        precoBase: 5,
       },
       {
-        itemId: "i1",
-        itemNome: "Item 1",
-        comercianteId: "c2",
-        comercianteNome: "Com 2",
+        id: "o2",
+        feira: {
+          id: "f1",
+          dataHora: "2026-04-15",
+          status: "ABERTA",
+          ativa: true,
+        },
+        comerciante: { id: "c2", nome: "Com 2" },
+        produto: {
+          id: "i1",
+          nome: "Item 1",
+          unidadeMedida: "kg",
+          precoBase: 6,
+        },
         quantidadeDisponivel: 5,
-        precoBase: 6,
       },
       {
-        itemId: "i2",
-        itemNome: "Item 2",
-        comercianteId: "c1",
-        comercianteNome: "Com 1",
+        id: "o3",
+        feira: {
+          id: "f1",
+          dataHora: "2026-04-15",
+          status: "ABERTA",
+          ativa: true,
+        },
+        comerciante: { id: "c1", nome: "Com 1" },
+        produto: {
+          id: "i2",
+          nome: "Item 2",
+          unidadeMedida: "un",
+          precoBase: 2,
+        },
         quantidadeDisponivel: 20,
-        precoBase: 2,
       },
     ];
 
@@ -53,7 +80,7 @@ describe("feiraService", () => {
 
     const result = await feiraService.getItensAgrupados("123");
 
-    expect(apiClient).toHaveBeenCalledWith("/api/estoque-banca?feiraId=123");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/estoque-bancas/feira/123");
     expect(result, "Expected 2 items: Item 1 and Item 2").toHaveLength(2);
 
     const item1 = result.find((r) => r.id === "i1");

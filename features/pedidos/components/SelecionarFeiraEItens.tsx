@@ -39,16 +39,15 @@ export function SelecionarFeiraEItens() {
       alert("Selecione uma feira");
       return;
     }
-    // Passar dados para próxima etapa
-    const itensList = itensSelecionados
-      .map((i) => `${i.id}:${i.quantidade}`)
-      .join(",");
-    const feiraNome = new Date(selectedFeira.dataHora).toLocaleDateString(
-      "pt-BR",
+    sessionStorage.setItem(
+      "agrofeira_pedido_itens",
+      JSON.stringify(itensSelecionados),
     );
-    const feiraNomeCompleto = `${feiraNome} - ${selectedFeira.local}`;
+    const feiraNomeCompleto = new Date(
+      selectedFeira.dataHora,
+    ).toLocaleDateString("pt-BR");
     router.push(
-      `/pedidos/resumo?participante=${participanteId}&tipo=${participanteTipo}&itens=${itensList}&feira=${selectedFeira.id}&feiraNome=${encodeURIComponent(feiraNomeCompleto)}`,
+      `/pedidos/resumo?participante=${participanteId}&tipo=${participanteTipo}&feira=${selectedFeira.id}&feiraNome=${encodeURIComponent(feiraNomeCompleto)}`,
     );
   };
 
@@ -114,7 +113,7 @@ export function SelecionarFeiraEItens() {
                       {new Date(feira.dataHora).toLocaleDateString("pt-BR")}
                     </p>
                     <p className="text-sm text-[#5bc48b] font-semibold">
-                      {feira.local}
+                      {feira.status}
                     </p>
                   </div>
                   <ChevronRight size={18} className="text-[#8aaa8d]" />
@@ -133,8 +132,7 @@ export function SelecionarFeiraEItens() {
               </div>
               <div>
                 <h2 className="font-bold text-[#1a3d1f] text-base">
-                  {new Date(selectedFeira.dataHora).toLocaleDateString("pt-BR")}{" "}
-                  - {selectedFeira.local}
+                  {new Date(selectedFeira.dataHora).toLocaleDateString("pt-BR")}
                 </h2>
                 <p className="text-sm text-[#5bc48b] font-bold">
                   Participante: {participanteNome}

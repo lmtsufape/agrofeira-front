@@ -6,60 +6,106 @@ import {
   ResumoFeiraDTO,
   EstoqueBancaDTO,
   ItemAgrupado,
+  FeiraDetalhesDTO,
+  FeiraRateioDTO,
 } from "./types";
 
-const baseService = createBaseService<FeiraDTO, CreateFeiraDTO>("/api/feiras");
+const baseService = createBaseService<FeiraDTO, CreateFeiraDTO>(
+  "/api/v1/feiras",
+);
 
 export const feiraService = {
   ...baseService,
 
-  /**
-   * Busca resumo detalhado da feira
-   */
   getResumo: (id: string) => {
-    return apiClient<ResumoFeiraDTO>(`/api/feiras/${id}/resumo`);
+    return apiClient<ResumoFeiraDTO>(`/api/v1/feiras/${id}/resumo`);
   },
 
-  /**
-   * Lista estoques vinculados a uma feira específica
-   */
-  getEstoques: (id: string) => {
-    return apiClient<EstoqueBancaDTO[]>(`/api/feiras/${id}/estoques`);
+  getDetalhes: (id: string) => {
+    return apiClient<FeiraDetalhesDTO>(`/api/v1/feiras/${id}/detalhes`);
   },
 
-  /**
-   * Busca itens agrupados por comerciantes para uma feira
-   */
-  getItensAgrupados: async (id: string): Promise<ItemAgrupado[]> => {
-    interface RawEstoqueItem {
-      itemId: string;
-      itemNome: string;
-      comercianteId: string;
-      comercianteNome: string;
+  getRateio: (id: string) => {
+    return apiClient<FeiraRateioDTO>(`/api/v1/feiras/${id}/rateio`);
+  },
+
+  atualizarStatus: (id: string, novoStatus: string) => {
+    return apiClient<FeiraDTO>(
+      `/api/v1/feiras/${id}/status?novoStatus=${novoStatus}`,
+      { method: "PATCH" },
+    );
+  },
+
+  getEstoques: async (id: string): Promise<EstoqueBancaDTO[]> => {
+    interface OfertaEstoqueDTO {
+      id: string;
+      feira: { id: string; dataHora: string; status: string; ativa: boolean };
+      comerciante: { id: string; nome: string };
+      produto: {
+        id: string;
+        nome: string;
+        unidadeMedida: string;
+        precoBase: number;
+      };
       quantidadeDisponivel: number;
-      precoBase: number;
     }
 
-    const data = await apiClient<RawEstoqueItem[]>(
-      `/api/estoque-banca?feiraId=${id}`,
+    const data = await apiClient<OfertaEstoqueDTO[]>(
+      `/api/v1/estoque-bancas/feira/${id}`,
+    );
+
+    const map = new Map<string, EstoqueBancaDTO>();
+
+    for (const oferta of data) {
+      if (!map.has(oferta.comerciante.id)) {
+        map.set(oferta.comerciante.id, {
+          id: oferta.comerciante.id,
+          comercianteId: oferta.comerciante.id,
+          comercianteNome: oferta.comerciante.nome,
+          feiraData: oferta.feira.dataHora,
+          itens: [],
+        });
+      }
+
+      map.get(oferta.comerciante.id)!.itens.push({
+        id: oferta.produto.id,
+        itemNome: oferta.produto.nome,
+        quantidadeDisponivel: oferta.quantidadeDisponivel,
+        precoBase: oferta.produto.precoBase,
+      });
+    }
+
+    return Array.from(map.values());
+  },
+
+  getItensAgrupados: async (id: string): Promise<ItemAgrupado[]> => {
+    interface OfertaEstoqueDTO {
+      id: string;
+      comerciante: { id: string; nome: string };
+      produto: { id: string; nome: string; precoBase: number };
+      quantidadeDisponivel: number;
+    }
+
+    const data = await apiClient<OfertaEstoqueDTO[]>(
+      `/api/v1/estoque-bancas/feira/${id}`,
     );
 
     const map = new Map<string, ItemAgrupado>();
 
-    for (const item of data) {
-      if (!map.has(item.itemId)) {
-        map.set(item.itemId, {
-          id: item.itemId,
-          nome: item.itemNome,
+    for (const oferta of data) {
+      if (!map.has(oferta.produto.id)) {
+        map.set(oferta.produto.id, {
+          id: oferta.produto.id,
+          nome: oferta.produto.nome,
           comerciantes: [],
         });
       }
 
-      map.get(item.itemId)!.comerciantes.push({
-        id: item.comercianteId,
-        nome: item.comercianteNome,
-        quantidade: item.quantidadeDisponivel,
-        valorUnitario: item.precoBase,
+      map.get(oferta.produto.id)!.comerciantes.push({
+        id: oferta.comerciante.id,
+        nome: oferta.comerciante.nome,
+        quantidade: oferta.quantidadeDisponivel,
+        valorUnitario: oferta.produto.precoBase,
       });
     }
 

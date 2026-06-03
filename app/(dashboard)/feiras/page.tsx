@@ -1,16 +1,42 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, RefreshCw } from "lucide-react";
 import { formatarData } from "@/utils/formatters";
 import { useFeiras } from "@/features/feiras/hooks/useFeiras";
 import { FEIRA_GERENCIAR_OPTIONS } from "@/features/feiras/constants/gerenciar-options";
+import { type FeiraStatus } from "@/features/feiras/api/types";
 import FeiraDropdown from "@/features/feiras/components/FeiraDropdown";
 import { ActionCard } from "@/components/ui/ActionCard";
 import { PageHeader } from "@/components/ui/PageHeader";
 
+const STATUS_OPTIONS: { value: FeiraStatus; label: string }[] = [
+  { value: "RASCUNHO", label: "Rascunho" },
+  { value: "ABERTA", label: "Aberta" },
+  { value: "ENCERRADA", label: "Encerrada" },
+  { value: "FINALIZADA", label: "Finalizada" },
+  { value: "CANCELADA", label: "Cancelada" },
+];
+
+const STATUS_COLORS: Record<FeiraStatus, string> = {
+  RASCUNHO: "bg-[#f3f3f3] text-[#666] border-[#ddd]",
+  ABERTA: "bg-[#E8F5EC] text-[#1B6112] border-[#C2E5CC]",
+  ENCERRADA: "bg-[#FFF8E6] text-[#B38600] border-[#FFE082]",
+  FINALIZADA: "bg-[#E3F2FD] text-[#1565C0] border-[#90CAF9]",
+  CANCELADA: "bg-[#FFEBEE] text-[#C62828] border-[#EF9A9A]",
+};
+
 export default function GerenciarFeiraPage() {
-  const { feiras, selected, setSelected, loading, error, isFeiraSelected } =
-    useFeiras();
+  const {
+    feiras,
+    selected,
+    setSelected,
+    loading,
+    error,
+    isFeiraSelected,
+    atualizandoStatus,
+    erroStatus,
+    handleAtualizarStatus,
+  } = useFeiras();
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-gradient-to-br from-[#f6faf4] to-[#edf5eb]">
@@ -52,6 +78,61 @@ export default function GerenciarFeiraPage() {
             loading={loading}
             error={error}
           />
+
+          {/* Status da feira */}
+          {isFeiraSelected && selected && (
+            <div className="mt-5 pt-5 border-t border-[#eef5ee]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-[#1a3d1f] text-xs font-semibold tracking-wider uppercase">
+                    Status atual:
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase border ${STATUS_COLORS[selected.status as FeiraStatus] ?? "bg-[#f3f3f3] text-[#666] border-[#ddd]"}`}
+                  >
+                    {STATUS_OPTIONS.find((s) => s.value === selected.status)
+                      ?.label ?? selected.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    defaultValue=""
+                    key={selected.id}
+                    onChange={(e) => {
+                      if (e.target.value)
+                        handleAtualizarStatus(e.target.value as FeiraStatus);
+                      e.target.value = "";
+                    }}
+                    disabled={atualizandoStatus}
+                    className="px-3 py-2 rounded-xl border border-[#d4e8d6] outline-none bg-white text-[#1a3d1f] shadow-sm focus:border-[#5bc48b] focus:ring-2 focus:ring-[#5bc48b1a] text-[0.85rem] transition-all duration-200 disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Alterar status...
+                    </option>
+                    {STATUS_OPTIONS.filter(
+                      (s) => s.value !== selected.status,
+                    ).map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {atualizandoStatus && (
+                    <RefreshCw
+                      size={15}
+                      className="animate-spin text-[#5bc48b]"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {erroStatus && (
+                <p className="mt-2 text-red-600 text-xs">{erroStatus}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Grid de opções */}

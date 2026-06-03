@@ -14,7 +14,7 @@ interface FeiraDropdownProps {
 }
 
 function isFeirasAtiva(status: FeiraDTO["status"]): boolean {
-  return status === "ABERTA_PEDIDOS" || status === "ABERTA_OFERTAS";
+  return status === "ABERTA";
 }
 
 export default function FeiraDropdown({

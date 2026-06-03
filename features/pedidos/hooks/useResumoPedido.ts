@@ -1,12 +1,15 @@
+"use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 
-export interface ItemPedido {
+export interface CartItem {
   id: string;
   nome: string;
   unidadeMedida: string;
+  precoBase: number;
   quantidade: number;
-  preco?: number;
 }
 
 export interface Endereco {
@@ -19,84 +22,25 @@ export interface Endereco {
   estado: string;
 }
 
-const MOCK_ITENS: ItemPedido[] = [
-  {
-    id: "1",
-    nome: "Tomate Orgânico",
-    unidadeMedida: "Kg",
-    quantidade: 0,
-    preco: 5.5,
-  },
-  {
-    id: "2",
-    nome: "Alface Crespa",
-    unidadeMedida: "Maço",
-    quantidade: 0,
-    preco: 3.0,
-  },
-  {
-    id: "3",
-    nome: "Cenoura Fresca",
-    unidadeMedida: "Maço",
-    quantidade: 0,
-    preco: 4.0,
-  },
-  {
-    id: "4",
-    nome: "Cebola Roxa",
-    unidadeMedida: "Kg",
-    quantidade: 0,
-    preco: 2.5,
-  },
-  {
-    id: "5",
-    nome: "Batata Doce",
-    unidadeMedida: "Kg",
-    quantidade: 0,
-    preco: 3.5,
-  },
-  {
-    id: "6",
-    nome: "Pimentão Verde",
-    unidadeMedida: "Kg",
-    quantidade: 0,
-    preco: 6.0,
-  },
-  {
-    id: "7",
-    nome: "Cheiro Verde",
-    unidadeMedida: "Maço",
-    quantidade: 0,
-    preco: 2.0,
-  },
-  { id: "8", nome: "Mandioca", unidadeMedida: "Kg", quantidade: 0, preco: 4.5 },
-];
-
-export function useResumoPedido(itensList: string) {
+export function useResumoPedido(feiraId: string, participanteId: string) {
   const router = useRouter();
 
-  const [itensCarrinho, setItensCarrinho] = useState<ItemPedido[]>(() => {
-    if (!itensList) return [];
-    const itensParsed: ItemPedido[] = [];
-    const pares = itensList.split(",");
-    pares.forEach((par) => {
-      const [id, qty] = par.split(":");
-      const itemOriginal = MOCK_ITENS.find((i) => i.id === id);
-      if (itemOriginal) {
-        itensParsed.push({
-          ...itemOriginal,
-          quantidade: parseInt(qty, 10),
-        });
-      }
-    });
-    return itensParsed;
+  const [itensCarrinho, setItensCarrinho] = useState<CartItem[]>(() => {
+    try {
+      const raw = sessionStorage.getItem("agrofeira_pedido_itens");
+      if (raw) return JSON.parse(raw) as CartItem[];
+    } catch {
+      // sessionStorage unavailable or malformed data
+    }
+    return [];
   });
-
   const [opcaoRetirada, setOpcaoRetirada] = useState<"local" | "endereco">(
     "local",
   );
   const [enderecoModal, setEnderecoModal] = useState(false);
   const [pedidoRealizado, setPedidoRealizado] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const [endereco, setEndereco] = useState<Endereco>({
     cep: "",
     rua: "",
@@ -122,16 +66,41 @@ export function useResumoPedido(itensList: string) {
   };
 
   const valorTotal = itensCarrinho.reduce(
-    (acc, item) => acc + (item.preco || 0) * item.quantidade,
+    (acc, item) => acc + item.precoBase * item.quantidade,
     0,
   );
 
   const finalizarPedido = async () => {
-    // Simulando chamada API
-    setPedidoRealizado(true);
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 3000);
+    if (itensCarrinho.length === 0) return;
+    if (!feiraId) {
+      setErro("Feira não identificada. Volte e selecione novamente.");
+      return;
+    }
+
+    setErro(null);
+    setSubmitting(true);
+    try {
+      await pedidoService.criar({
+        feiraId,
+        tipoRetirada: opcaoRetirada === "endereco" ? "ENTREGA" : "LOCAL",
+        itens: itensCarrinho.map((item) => ({
+          produtoId: item.id,
+          quantidade: item.quantidade,
+        })),
+        consumidorId: participanteId || undefined,
+      });
+      sessionStorage.removeItem("agrofeira_pedido_itens");
+      setPedidoRealizado(true);
+      setTimeout(() => {
+        router.push("/pedidos");
+      }, 2500);
+    } catch {
+      setErro(
+        "Erro ao realizar pedido. Verifique o estoque e tente novamente.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return {
@@ -141,6 +110,8 @@ export function useResumoPedido(itensList: string) {
     enderecoModal,
     setEnderecoModal,
     pedidoRealizado,
+    submitting,
+    erro,
     endereco,
     setEndereco,
     valorTotal,

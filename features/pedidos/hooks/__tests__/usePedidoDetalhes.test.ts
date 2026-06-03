@@ -18,7 +18,7 @@ describe("usePedidoDetalhes", () => {
   });
 
   it("deve carregar detalhes do pedido com sucesso", async () => {
-    const mockPedido = { id: "p1", clienteNome: "João" };
+    const mockPedido = { id: "p1", consumidorNome: "João" };
     (pedidoService.buscarPorId as Mock).mockResolvedValue(mockPedido);
 
     const { result } = renderHook(() => usePedidoDetalhes("p1"));

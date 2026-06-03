@@ -29,7 +29,7 @@ export function ClienteDropdown({
       searchPlaceholder="Buscar cliente…"
       emptyText="Nenhum resultado"
       getSearchableString={(c) => c.clienteNome}
-      getId={(c) => c.clienteId}
+      getId={(c) => c.clienteNome}
       renderSelected={(c) => c.clienteNome}
       renderItem={(c, isSel) => (
         <>

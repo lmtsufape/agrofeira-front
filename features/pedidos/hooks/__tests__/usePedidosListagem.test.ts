@@ -2,7 +2,6 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { usePedidosListagem } from "../usePedidosListagem";
 import { pedidoService } from "@/features/pedidos/api/pedidos.service";
-import { useRouter } from "next/navigation";
 
 vi.mock("@/features/pedidos/api/pedidos.service");
 vi.mock("next/navigation", () => ({
@@ -10,17 +9,21 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("usePedidosListagem", () => {
-  const mockPush = vi.fn();
-  const mockPedidos = [
-    { id: "p1", clienteNome: "João Silva" },
-    { id: "p2", clienteNome: "Maria Souza" },
-    { id: "p3", clienteNome: "Jose Santos" },
-  ];
+  const mockPage = {
+    content: [
+      { id: "p1", consumidorNome: "João Silva" },
+      { id: "p2", consumidorNome: "Maria Souza" },
+      { id: "p3", consumidorNome: "Jose Santos" },
+    ],
+    totalElements: 3,
+    totalPages: 2,
+    number: 0,
+    size: 2,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as Mock).mockReturnValue({ push: mockPush });
-    (pedidoService.listar as Mock).mockResolvedValue(mockPedidos);
+    (pedidoService.listar as Mock).mockResolvedValue(mockPage);
   });
 
   it("deve carregar os pedidos ao inicializar", async () => {
@@ -32,11 +35,10 @@ describe("usePedidosListagem", () => {
 
     expect(result.current.loading).toBe(false);
     expect(result.current.totalCount).toBe(3);
-    // Verificando paginação (limitada a 2 itens por página no setup)
-    expect(result.current.pedidos).toHaveLength(2);
+    expect(result.current.pedidos).toHaveLength(3);
   });
 
-  it("deve filtrar os pedidos corretamente", async () => {
+  it("deve filtrar os pedidos na página atual ao buscar", async () => {
     const { result } = renderHook(() => usePedidosListagem(10));
     await act(async () => {
       await Promise.resolve();
@@ -47,7 +49,7 @@ describe("usePedidosListagem", () => {
     });
 
     expect(result.current.pedidos).toHaveLength(1);
-    expect(result.current.pedidos[0].clienteNome).toBe("Maria Souza");
+    expect(result.current.pedidos[0].consumidorNome).toBe("Maria Souza");
   });
 
   it("deve gerenciar a navegação entre páginas", async () => {
@@ -57,27 +59,12 @@ describe("usePedidosListagem", () => {
     });
 
     expect(result.current.currentPage).toBe(1);
-    expect(result.current.totalPages).toBe(2);
 
     act(() => {
       result.current.setCurrentPage(2);
     });
 
     expect(result.current.currentPage).toBe(2);
-    expect(result.current.pedidos).toHaveLength(1);
-  });
-
-  it("deve navegar para os detalhes ao selecionar um pedido", async () => {
-    const { result } = renderHook(() => usePedidosListagem());
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    act(() => {
-      result.current.handleRowClick("p1");
-    });
-
-    expect(mockPush).toHaveBeenCalledWith("/pedidos/p1");
   });
 
   it("deve capturar erro se a API falhar", async () => {

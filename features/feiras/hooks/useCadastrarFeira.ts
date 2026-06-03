@@ -181,12 +181,10 @@ export function useCadastrarFeira() {
     setSubmitting(true);
     try {
       await feiraService.create({
-        feira: {
-          dataHora: new Date(dataFeira).toISOString().replace("Z", ""),
-          status: "AGENDADA",
-        },
+        dataHora: new Date(dataFeira).toISOString().replace("Z", ""),
+        status: "RASCUNHO",
         comercianteIds: cmRight.map((c) => c.id),
-        itemIds: itRight.map((i) => i.id),
+        produtoIds: itRight.map((i) => i.id),
       });
       router.push("/feiras");
     } catch {
