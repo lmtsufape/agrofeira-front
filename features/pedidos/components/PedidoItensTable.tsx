@@ -39,7 +39,7 @@ export function PedidoItensTable({
         <div>
           {itens.map((item) => (
             <div
-              key={item.id}
+              key={item.produtoId}
               className={`grid grid-cols-[1fr_0.5fr_0.5fr] gap-6 px-6 py-4 items-center border-b border-[#F0F5F0] last:border-0 hover:bg-[#5bc48b08] transition-colors`}
             >
               <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ export function PedidoItensTable({
                   <Package size={16} className="text-[#5BC48B]" />
                 </div>
                 <span className="text-base font-semibold text-[#1A3D1F] truncate">
-                  {item.itemNome}
+                  {item.nomeItem}
                 </span>
               </div>
               <span className="text-center font-medium text-[#1A3D1F]">

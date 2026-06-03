@@ -49,7 +49,7 @@ describe("ResumoPedido Component", () => {
           id: "1",
           nome: "Tomate",
           quantidade: 2,
-          preco: 5.0,
+          precoBase: 5.0,
           unidadeMedida: "Kg",
         },
       ],
@@ -76,7 +76,15 @@ describe("ResumoPedido Component", () => {
   it("deve chamar finalizarPedido ao clicar no botão Finalizar", () => {
     (useResumoPedido as Mock).mockReturnValue({
       ...defaultHookReturn,
-      itensCarrinho: [{ id: "1", nome: "Tomate", quantidade: 2 }],
+      itensCarrinho: [
+        {
+          id: "1",
+          nome: "Tomate",
+          quantidade: 2,
+          precoBase: 5.0,
+          unidadeMedida: "Kg",
+        },
+      ],
     });
 
     render(<ResumoPedido />);

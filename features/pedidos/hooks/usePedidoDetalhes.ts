@@ -5,11 +5,22 @@ import { useRouter } from "next/navigation";
 import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 import { type PedidoDTO } from "@/features/pedidos/api/types";
 
+const PROXIMOS_STATUS: Record<string, string[]> = {
+  PENDENTE: ["AGUARDANDO_SEPARACAO", "CANCELADO"],
+  AGUARDANDO_SEPARACAO: ["PRONTO_RETIRADA", "CANCELADO"],
+  PRONTO_RETIRADA: ["SAIU_ENTREGA", "ENTREGUE", "CANCELADO"],
+  SAIU_ENTREGA: ["ENTREGUE"],
+  ENTREGUE: [],
+  CANCELADO: [],
+};
+
 export function usePedidoDetalhes(pedidoId: string) {
   const router = useRouter();
   const [pedido, setPedido] = useState<PedidoDTO | null>(null);
   const [loading, setLoading] = useState(!!pedidoId);
   const [erro, setErro] = useState<string | null>(null);
+  const [atualizandoStatus, setAtualizandoStatus] = useState(false);
+  const [erroStatus, setErroStatus] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -45,6 +56,25 @@ export function usePedidoDetalhes(pedidoId: string) {
     };
   }, [pedidoId]);
 
+  const handleAtualizarStatus = async (novoStatus: string) => {
+    if (!pedidoId) return;
+    try {
+      setAtualizandoStatus(true);
+      setErroStatus(null);
+      const atualizado = await pedidoService.atualizarStatus(
+        pedidoId,
+        novoStatus,
+      );
+      setPedido(atualizado);
+    } catch {
+      setErroStatus("Erro ao atualizar status do pedido.");
+    } finally {
+      setAtualizandoStatus(false);
+    }
+  };
+
+  const proximosStatus = pedido ? (PROXIMOS_STATUS[pedido.status] ?? []) : [];
+
   const handleVoltar = () => router.push("/pedidos");
   const handlePrint = () => window.print();
 
@@ -54,5 +84,9 @@ export function usePedidoDetalhes(pedidoId: string) {
     erro,
     handleVoltar,
     handlePrint,
+    proximosStatus,
+    handleAtualizarStatus,
+    atualizandoStatus,
+    erroStatus,
   };
 }

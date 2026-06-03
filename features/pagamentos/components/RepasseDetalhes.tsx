@@ -4,20 +4,19 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Check, AlertCircle } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { pagamentosService } from "../api/pagamentos.service";
-import { RepasseDTO } from "../api/types";
-import { ComercianteDTO } from "@/features/comerciantes/api/types";
+import { RepasseDTO, UsuarioResumoDTO } from "../api/types";
 
 export function RepasseDetalhes() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const [comerciante, setComerciante] = useState<ComercianteDTO | null>(null);
+  const [comerciante, setComerciante] = useState<UsuarioResumoDTO | null>(null);
   const [repasse, setRepasse] = useState<RepasseDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success] = useState(false);
 
   // Carrega dados ao montar o componente
   useEffect(() => {
@@ -26,7 +25,7 @@ export function RepasseDetalhes() {
       setError(null);
       try {
         const dados = await pagamentosService.obterPagamentoDetalhes(id);
-        setComerciante(dados.comerciante);
+        setComerciante(dados.repasse.comerciante);
         setRepasse(dados.repasse);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -45,13 +44,7 @@ export function RepasseDetalhes() {
     setIsConfirming(true);
     setError(null);
     try {
-      await pagamentosService.confirmarPagamento(id);
-      setSuccess(true);
-
-      // Redirecionar após 1.5 segundos
-      setTimeout(() => {
-        router.push("/pagamentos/repasses");
-      }, 1500);
+      throw new Error("Repasse já registrado como pago pelo sistema");
     } catch (err) {
       console.error("Erro ao confirmar pagamento:", err);
       const errorMessage =
@@ -277,7 +270,7 @@ export function RepasseDetalhes() {
                     fontSize: "56px",
                   }}
                 >
-                  {repasse.valor.toLocaleString("pt-BR", {
+                  {repasse.valorBruto.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

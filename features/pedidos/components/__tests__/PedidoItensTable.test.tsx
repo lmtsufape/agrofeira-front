@@ -5,20 +5,20 @@ import { PedidoItensTable } from "../PedidoItensTable";
 describe("PedidoItensTable", () => {
   const mockItens = [
     {
-      id: "1",
-      itemNome: "Cenoura",
+      produtoId: "i1",
+      nomeItem: "Cenoura",
+      unidadeMedida: "kg",
       quantidade: 2,
       valorUnitario: 5.0,
       valorTotal: 10.0,
-      itemId: "i1",
     },
     {
-      id: "2",
-      itemNome: "Alface",
+      produtoId: "i2",
+      nomeItem: "Alface",
+      unidadeMedida: "un",
       quantidade: 1,
       valorUnitario: 3.5,
       valorTotal: 3.5,
-      itemId: "i2",
     },
   ];
 

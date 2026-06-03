@@ -15,7 +15,8 @@ export function ResumoPedido() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const itensList = searchParams.get("itens") || "";
+  const feiraId = searchParams.get("feira") || "";
+  const participanteId = searchParams.get("participante") || "";
   const feiraNomeCompleto =
     searchParams.get("feiraNome") || "15/04/2026 - Garanhuns PE";
 
@@ -26,13 +27,15 @@ export function ResumoPedido() {
     enderecoModal,
     setEnderecoModal,
     pedidoRealizado,
+    submitting,
+    erro,
     endereco,
     setEndereco,
     valorTotal,
     handleQuantidadeChange,
     handleRemover,
     finalizarPedido,
-  } = useResumoPedido(itensList);
+  } = useResumoPedido(feiraId, participanteId);
 
   const id = useId();
   const numeroPedido = id.replace(/:/g, "").slice(0, 9).toUpperCase();
@@ -142,7 +145,7 @@ export function ResumoPedido() {
                         </p>
                         <p className="text-xs text-[#8aaa8d]">
                           {item.unidadeMedida} • R${" "}
-                          {(item.preco || 0).toFixed(2).replace(".", ",")}
+                          {item.precoBase.toFixed(2).replace(".", ",")}
                         </p>
                       </div>
                     </div>
@@ -309,15 +312,26 @@ export function ResumoPedido() {
           )}
         </div>
 
+        {/* Erro */}
+        {erro && (
+          <p className="text-sm text-red-600 font-semibold text-center">
+            {erro}
+          </p>
+        )}
+
         {/* Botões de ação */}
         <div className="flex flex-col-reverse sm:flex-row-reverse sm:justify-end gap-3 sm:gap-4 pb-4">
           <button
             onClick={finalizarPedido}
-            disabled={itensCarrinho.length === 0 || pedidoRealizado}
+            disabled={
+              itensCarrinho.length === 0 || pedidoRealizado || submitting
+            }
             className="h-10 sm:h-12 px-4 sm:px-8 bg-gradient-to-r from-[#003d04] to-[#1b6112] text-white font-bold rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            <span>Finalizar</span>
-            <ChevronRight size={16} className="hidden sm:block" />
+            <span>{submitting ? "Enviando..." : "Finalizar"}</span>
+            {!submitting && (
+              <ChevronRight size={16} className="hidden sm:block" />
+            )}
           </button>
           <button
             onClick={() => router.back()}

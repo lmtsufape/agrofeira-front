@@ -30,7 +30,7 @@ export function ItemTable({ cliente }: Readonly<ItemTableProps>) {
   return (
     <DataTableList
       data={cliente.itens}
-      getKey={(it) => it.itemId}
+      getKey={(it) => it.produtoId}
       mobileHeaderTitle="Itens do pedido"
       columns={[
         { label: "Nome", icon: Package, align: "left" },
@@ -40,7 +40,7 @@ export function ItemTable({ cliente }: Readonly<ItemTableProps>) {
       ]}
       renderRowDesktop={(item) => (
         <>
-          <TableCellIcon icon={Package} label={item.itemNome} />
+          <TableCellIcon icon={Package} label={item.nomeItem} />
           <TableCellBadge value={Number(item.quantidade)} />
           <TableCellText value={formatarMoeda(Number(item.valorUnitario))} />
           <TableCellBold
@@ -53,7 +53,7 @@ export function ItemTable({ cliente }: Readonly<ItemTableProps>) {
       renderRowMobile={(item) => (
         <MobileTableRow
           icon={Package}
-          title={item.itemNome}
+          title={item.nomeItem}
           subtitle={`${Number(item.quantidade)}x ${formatarMoeda(
             Number(item.valorUnitario),
           )}`}

@@ -1,7 +1,7 @@
 export type FeiraStatus =
   | "RASCUNHO"
-  | "ABERTA_OFERTAS"
-  | "ABERTA_PEDIDOS"
+  | "ABERTA"
+  | "ENCERRADA"
   | "FINALIZADA"
   | "CANCELADA";
 
@@ -9,8 +9,7 @@ export interface FeiraDTO {
   id: string;
   dataHora: string;
   status: FeiraStatus;
-  comerciantes: unknown[];
-  itens: unknown[];
+  ativa: boolean;
 }
 
 export interface ItemEstoqueDTO {
@@ -49,10 +48,57 @@ export interface ItemAgrupado {
 }
 
 export interface CreateFeiraDTO {
-  feira: {
-    dataHora: string;
-    status: string;
-  };
+  dataHora: string;
+  status?: FeiraStatus;
   comercianteIds: string[];
-  itemIds: string[];
+  produtoIds: string[];
+}
+
+export interface FeiraDetalhesDTO {
+  id: string;
+  dataHora: string;
+  status: string;
+  totalPedidos: number;
+  totalComerciantes: number;
+  totalProdutos: number;
+  valorTotalPedidos: number;
+  valorTotalProdutos: number;
+  totalTaxasEntrega: number;
+  pedidosPorStatus: Record<string, number>;
+  totalRateado: number;
+}
+
+export interface RateioResultadoDTO {
+  id: string;
+  produto: {
+    id: string;
+    nome: string;
+    categoria: string;
+    unidadeMedida: string;
+    precoBase: number;
+  };
+  quantidadeSequestrada: number;
+  valorBrutoVenda: number;
+  statusProcessamento: string;
+}
+
+export interface ComercianteRateioDTO {
+  comerciante: {
+    id: string;
+    nome: string;
+    email: string | null;
+    telefone: string | null;
+    descricao: string | null;
+    perfis: string[];
+  };
+  produtos: RateioResultadoDTO[];
+  totalSequestrado: number;
+  totalBrutoVenda: number;
+}
+
+export interface FeiraRateioDTO {
+  feiraId: string;
+  totalRateado: number;
+  totalComerciantes: number;
+  comerciantes: ComercianteRateioDTO[];
 }

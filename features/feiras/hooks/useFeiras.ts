@@ -1,69 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useState } from "react";
+import useSWR from "swr";
 import { feiraService } from "@/features/feiras/api/feiras.service";
-import { type FeiraDTO } from "@/features/feiras/api/types";
-
-const MOCK_FEIRAS: FeiraDTO[] = [
-  {
-    id: "mock-1",
-    dataHora: new Date().toISOString(),
-    status: "ABERTA_PEDIDOS",
-    comerciantes: [],
-    itens: [],
-  },
-  {
-    id: "mock-2",
-    dataHora: new Date(Date.now() + 86400000 * 7).toISOString(),
-    status: "ABERTA_OFERTAS",
-    comerciantes: [],
-    itens: [],
-  },
-  {
-    id: "mock-3",
-    dataHora: new Date(Date.now() - 86400000 * 7).toISOString(),
-    status: "FINALIZADA",
-    comerciantes: [],
-    itens: [],
-  },
-];
+import { type FeiraDTO, type FeiraStatus } from "@/features/feiras/api/types";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 export function useFeiras() {
-  const { token } = useAuth();
-  const [feiras, setFeiras] = useState<FeiraDTO[]>([]);
+  const { isAuthenticated } = useAuth();
   const [selected, setSelected] = useState<FeiraDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [atualizandoStatus, setAtualizandoStatus] = useState(false);
+  const [erroStatus, setErroStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchFeiras() {
-      if (!token || token === "mock-token-dev") {
-        setFeiras(MOCK_FEIRAS);
-        setLoading(false);
-        return;
-      }
-      try {
-        const data = await feiraService.getAll();
-        setFeiras(data.content);
-      } catch {
-        setFeiras(MOCK_FEIRAS);
-        setError(
-          "Não foi possível carregar as feiras da API, usando dados locais.",
-        );
-      } finally {
-        setLoading(false);
-      }
+  const {
+    data,
+    error,
+    isLoading: loading,
+    mutate,
+  } = useSWR(
+    isAuthenticated ? "/api/v1/feiras?size=100" : null,
+    () => feiraService.getAll({ size: 100 }),
+    { revalidateOnFocus: false },
+  );
+
+  const handleAtualizarStatus = async (novoStatus: FeiraStatus) => {
+    if (!selected) return;
+    setErroStatus(null);
+    setAtualizandoStatus(true);
+    try {
+      const atualizada = await feiraService.atualizarStatus(
+        selected.id,
+        novoStatus,
+      );
+      setSelected(atualizada);
+      await mutate();
+    } catch {
+      setErroStatus("Não foi possível atualizar o status da feira.");
+    } finally {
+      setAtualizandoStatus(false);
     }
-    fetchFeiras();
-  }, [token]);
+  };
 
   return {
-    feiras,
+    feiras: data?.content ?? [],
     selected,
     setSelected,
     loading,
-    error,
+    error: error ? "Não foi possível carregar as feiras." : null,
     isFeiraSelected: selected !== null,
+    atualizandoStatus,
+    erroStatus,
+    handleAtualizarStatus,
   };
 }

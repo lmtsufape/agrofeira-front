@@ -4,11 +4,24 @@ import { ItemTable } from "../ItemTable";
 
 describe("ItemTable", () => {
   const mockCliente = {
-    clienteId: "c1",
     clienteNome: "João",
     itens: [
-      { itemId: "it1", itemNome: "Alface", quantidade: 2, valorUnitario: 3.5 },
-      { itemId: "it2", itemNome: "Tomate", quantidade: 1, valorUnitario: 8.0 },
+      {
+        produtoId: "it1",
+        nomeItem: "Alface",
+        unidadeMedida: "un",
+        quantidade: 2,
+        valorUnitario: 3.5,
+        valorTotal: 7.0,
+      },
+      {
+        produtoId: "it2",
+        nomeItem: "Tomate",
+        unidadeMedida: "un",
+        quantidade: 1,
+        valorUnitario: 8.0,
+        valorTotal: 8.0,
+      },
     ],
     totalGeral: 15.0,
     pedidos: [],

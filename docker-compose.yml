@@ -23,52 +23,52 @@ services:
       timeout: 5s
       retries: 5
 
-  agrofeira-backend:
-    container_name: agrofeira-backend
-    image: nettojulio/agrofeira-api:latest
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://agrofeira-database:5432/${POSTGRES_DB:-postgres}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      SPRING_PROFILES_ACTIVE: dev
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      FRONTEND_URL: http://localhost:3000
-    depends_on:
-      agrofeira-database:
-        condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-    networks:
-      - app-private-network
+#  agrofeira-backend:
+#    container_name: agrofeira-backend
+#    image: nettojulio/agrofeira-api:latest
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://agrofeira-database:5432/${POSTGRES_DB:-postgres}
+#      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+#      SPRING_PROFILES_ACTIVE: dev
+#      MAIL_USERNAME: ${MAIL_USERNAME}
+#      MAIL_PASSWORD: ${MAIL_PASSWORD}
+#      FRONTEND_URL: http://localhost:3000
+#    depends_on:
+#      agrofeira-database:
+#        condition: service_healthy
+#    healthcheck:
+#      test:
+#        [
+#          "CMD-SHELL",
+#          "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1",
+#        ]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 5
+#    restart: always
+#    networks:
+#      - app-private-network
 
-  # agrofeira-frontend:
-  #   container_name: agrofeira-frontend
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #     args:
-  #       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     agrofeira-database:
-  #       condition: service_healthy
-  #     agrofeira-backend:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-private-network
-  #   restart: unless-stopped
+# agrofeira-frontend:
+#   container_name: agrofeira-frontend
+#   build:
+#     context: .
+#     dockerfile: Dockerfile
+#     args:
+#       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+#   ports:
+#     - "3000:3000"
+#   depends_on:
+#     agrofeira-database:
+#       condition: service_healthy
+#     agrofeira-backend:
+#       condition: service_healthy
+#   networks:
+#     - app-private-network
+#   restart: unless-stopped
 
 volumes:
   postgres-data:

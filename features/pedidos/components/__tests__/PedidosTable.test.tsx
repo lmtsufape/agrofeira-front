@@ -14,14 +14,11 @@ describe("PedidosTable", () => {
   const mockPedidos: PedidoDTO[] = [
     {
       id: "ped-123456",
-      clienteNome: "João da Silva",
-      feiraData: "2024-12-25T10:00:00Z",
+      consumidorNome: "João da Silva",
+      criadoEm: "2024-12-25T10:00:00Z",
       status: "ENTREGUE",
       valorTotal: 150.0,
-      clienteId: "c1",
       feiraId: "f1",
-      comercianteVendedorId: "com1",
-      comercianteVendedorNome: "Banca A",
       tipoRetirada: "ENTREGA",
       taxaEntrega: 10,
       valorProdutos: 140,
@@ -40,7 +37,7 @@ describe("PedidosTable", () => {
     expect(screen.getByText("João da Silva")).toBeInTheDocument();
     // A lógica de iniciais pegou JD (provavelmente João Da)
     expect(screen.getByText("JD")).toBeInTheDocument();
-    expect(screen.getByText("ENTREGUE")).toBeInTheDocument();
+    expect(screen.getByText("Entregue")).toBeInTheDocument();
     expect(screen.getByText(/R\$\s?150,00/)).toBeInTheDocument();
     expect(screen.getByText(/ID: #123456/i)).toBeInTheDocument();
   });

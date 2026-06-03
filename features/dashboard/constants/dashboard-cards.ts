@@ -9,6 +9,7 @@ import {
   UserCog,
   PackageOpen,
   Wallet,
+  ArrowRightLeft,
 } from "lucide-react";
 import { ElementType } from "react";
 
@@ -104,5 +105,13 @@ export const MANAGE_CARDS: CardItem[] = [
     description: "Controle financeiro e transações",
     accent: "#5bc48b",
     href: "/pagamentos",
+  },
+  {
+    label: "Ver",
+    sublabel: "Repasses",
+    icon: ArrowRightLeft,
+    description: "Repasses financeiros aos comerciantes",
+    accent: "#003d04",
+    href: "/repasses",
   },
 ];

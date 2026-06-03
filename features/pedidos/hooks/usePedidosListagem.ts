@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 import { type PedidoDTO } from "@/features/pedidos/api/types";
 
 export function usePedidosListagem(itemsPerPage: number = 5) {
-  const router = useRouter();
-  const [pedidos, setPedidos] = useState<PedidoDTO[]>([]);
+  const [allPedidos, setAllPedidos] = useState<PedidoDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -19,9 +19,11 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
     async function fetchPedidos() {
       try {
         setLoading(true);
-        const data = await pedidoService.listar();
+        const page = await pedidoService.listar(currentPage - 1, itemsPerPage);
         if (isMounted) {
-          setPedidos(data);
+          setAllPedidos(page.content);
+          setTotalCount(page.totalElements);
+          setTotalPages(page.totalPages);
         }
       } catch (error) {
         if (isMounted) {
@@ -40,27 +42,18 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
-  const filteredPedidos = useMemo(() => {
-    return pedidos.filter(
+  const pedidos = useMemo(() => {
+    if (!searchTerm) return allPedidos;
+    return allPedidos.filter(
       (p) =>
-        p.clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.consumidorNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.id.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [pedidos, searchTerm]);
+  }, [allPedidos, searchTerm]);
 
-  const totalCount = filteredPedidos.length;
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-
-  const currentPedidos = useMemo(() => {
-    return filteredPedidos.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPedidos, startIndex, itemsPerPage]);
-
-  const handleRowClick = (id: string) => {
-    router.push(`/pedidos/${id}`);
-  };
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -68,7 +61,7 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
   };
 
   return {
-    pedidos: currentPedidos,
+    pedidos,
     loading,
     erro,
     searchTerm,
@@ -78,6 +71,5 @@ export function usePedidosListagem(itemsPerPage: number = 5) {
     totalPages,
     totalCount,
     startIndex,
-    handleRowClick,
   };
 }

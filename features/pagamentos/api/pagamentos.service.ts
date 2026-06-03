@@ -1,77 +1,67 @@
 import { apiClient } from "@/lib/api-client";
-import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
 import {
   RelatorioDTO,
-  RepasseComercianteDTO,
   RepasseDTO,
   PagamentoDetalhesDTO,
+  FaturamentoMensalDTO,
+  FeiraDTO,
+  FeiraDetalhesDTO,
+  RepasseTotaisDTO,
 } from "./types";
 
+interface SpringPage<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+}
+
 export const pagamentosService = {
-  /**
-   * Relatórios
-   */
-  listarRelatoriosPorMes: (ano: number) => {
-    return apiClient<RelatorioDTO[]>(`/api/relatorios/por-mes?ano=${ano}`);
+  listarRelatorios: async (): Promise<RelatorioDTO[]> => {
+    const page =
+      await apiClient<SpringPage<RelatorioDTO>>("/api/v1/relatorios");
+    return page.content;
   },
 
-  listarRelatoriosPorComercianteMes: (
+  listarRepasses: async (): Promise<RepasseDTO[]> => {
+    const page = await apiClient<SpringPage<RepasseDTO>>("/api/v1/repasses");
+    return page.content;
+  },
+
+  listarRepassesPorComerciante: (
     comercianteId: string,
-    ano: number,
-    mes: number,
-  ) => {
-    return apiClient<RelatorioDTO[]>(
-      `/api/relatorios/por-comerciante/mes?comercianteId=${comercianteId}&ano=${ano}&mes=${mes}`,
-    );
-  },
+  ): Promise<RepasseDTO[]> =>
+    apiClient<RepasseDTO[]>(`/api/v1/repasses/comerciante/${comercianteId}`),
 
-  listarRelatoriosPorComercianteAno: (comercianteId: string, ano: number) => {
-    return apiClient<RelatorioDTO[]>(
-      `/api/relatorios/por-comerciante/ano?comercianteId=${comercianteId}&ano=${ano}`,
-    );
-  },
-
-  /**
-   * Repasses
-   */
-  listarRepasses: (mes?: number, ano?: number) => {
-    const params = new URLSearchParams();
-    if (mes) params.append("mes", mes.toString());
-    if (ano) params.append("ano", ano.toString());
-
-    const queryString = params.toString();
-    const url = queryString ? `/api/repasses?${queryString}` : "/api/repasses";
-
-    return apiClient<RepasseComercianteDTO[]>(url);
-  },
-
-  confirmarPagamento: (comercianteId: string) => {
-    return apiClient<RepasseDTO>(
-      `/api/repasses/comerciantes/${comercianteId}/confirmar`,
-      {
-        method: "PUT",
-      },
-    );
-  },
-
-  obterDetalhesRepasse: (comercianteId: string) => {
-    return apiClient<RepasseDTO>(`/api/repasses/comerciantes/${comercianteId}`);
-  },
-
-  /**
-   * Composição
-   */
   obterPagamentoDetalhes: async (
     comercianteId: string,
   ): Promise<PagamentoDetalhesDTO> => {
-    const [comerciante, repasse] = await Promise.all([
-      comercianteService.getById(comercianteId),
-      pagamentosService.obterDetalhesRepasse(comercianteId),
-    ]);
-
-    return {
-      comerciante,
-      repasse,
-    };
+    const repasses =
+      await pagamentosService.listarRepassesPorComerciante(comercianteId);
+    if (repasses.length === 0) {
+      throw new Error("Nenhum repasse encontrado para este comerciante");
+    }
+    return { repasse: repasses[0] };
   },
+
+  relatorioMensal: (ano?: number): Promise<FaturamentoMensalDTO[]> =>
+    apiClient<FaturamentoMensalDTO[]>(
+      `/api/v1/relatorios/por-mes${ano ? `?ano=${ano}` : ""}`,
+    ),
+
+  relatorioGeralPorComerciante: (): Promise<RepasseTotaisDTO[]> =>
+    apiClient<RepasseTotaisDTO[]>("/api/v1/relatorios/por-comerciante"),
+
+  listarFeiras: async (): Promise<FeiraDTO[]> => {
+    const page = await apiClient<SpringPage<FeiraDTO>>(
+      "/api/v1/feiras?size=100",
+    );
+    return page.content;
+  },
+
+  detalhesFeira: (id: string): Promise<FeiraDetalhesDTO> =>
+    apiClient<FeiraDetalhesDTO>(`/api/v1/feiras/${id}/detalhes`),
+
+  totaisRepassesPorFeira: (feiraId: string): Promise<RepasseTotaisDTO[]> =>
+    apiClient<RepasseTotaisDTO[]>(`/api/v1/repasses/feira/${feiraId}/totais`),
 };

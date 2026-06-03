@@ -28,6 +28,7 @@ function DetalhamentoItemComercianteContent() {
       <PageHeader
         title="Item → Comerciante"
         subtitle="Veja quais comerciantes oferecem cada item cadastrado"
+        backHref={`/feiras/detalhamento${feiraId ? `?feiraId=${feiraId}` : ""}`}
       />
 
       {erro && (

@@ -2,23 +2,51 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { useResumoPedido } from "../useResumoPedido";
 import { useRouter } from "next/navigation";
+import { pedidoService } from "@/features/pedidos/api/pedidos.service";
 
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
+vi.mock("@/features/pedidos/api/pedidos.service", () => ({
+  pedidoService: {
+    criar: vi.fn(),
+  },
+}));
+
+const mockCartItems = [
+  {
+    id: "1",
+    nome: "Tomate Orgânico",
+    unidadeMedida: "kg",
+    precoBase: 5.5,
+    quantidade: 2,
+  },
+  {
+    id: "2",
+    nome: "Alface",
+    unidadeMedida: "maço",
+    precoBase: 3.0,
+    quantidade: 1,
+  },
+];
+
 describe("useResumoPedido", () => {
   const mockPush = vi.fn();
-  const mockItensList = "1:2,2:1"; // id 1 (qty 2), id 2 (qty 1)
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as Mock).mockReturnValue({ push: mockPush });
-    vi.useFakeTimers();
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation((key) => {
+      if (key === "agrofeira_pedido_itens")
+        return JSON.stringify(mockCartItems);
+      return null;
+    });
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {});
   });
 
-  it("deve processar itens da query string corretamente", () => {
-    const { result } = renderHook(() => useResumoPedido(mockItensList));
+  it("deve processar itens do sessionStorage corretamente", () => {
+    const { result } = renderHook(() => useResumoPedido("feira-1", "part-1"));
 
     expect(result.current.itensCarrinho).toHaveLength(2);
     expect(result.current.itensCarrinho[0].quantidade).toBe(2);
@@ -27,7 +55,7 @@ describe("useResumoPedido", () => {
   });
 
   it("deve permitir alterar quantidade no carrinho e recalcular total", () => {
-    const { result } = renderHook(() => useResumoPedido(mockItensList));
+    const { result } = renderHook(() => useResumoPedido("feira-1", "part-1"));
 
     act(() => {
       result.current.handleQuantidadeChange("1", 1); // +1
@@ -38,7 +66,7 @@ describe("useResumoPedido", () => {
   });
 
   it("deve permitir remover item do carrinho", () => {
-    const { result } = renderHook(() => useResumoPedido(mockItensList));
+    const { result } = renderHook(() => useResumoPedido("feira-1", "part-1"));
 
     act(() => {
       result.current.handleRemover("2");
@@ -49,7 +77,8 @@ describe("useResumoPedido", () => {
   });
 
   it("deve gerenciar opção de retirada e modal de endereço", () => {
-    const { result } = renderHook(() => useResumoPedido(""));
+    vi.spyOn(Storage.prototype, "getItem").mockReturnValue(null);
+    const { result } = renderHook(() => useResumoPedido("feira-1", ""));
 
     expect(result.current.opcaoRetirada).toBe("local");
 
@@ -63,7 +92,10 @@ describe("useResumoPedido", () => {
   });
 
   it("deve finalizar pedido, marcar como realizado e redirecionar", async () => {
-    const { result } = renderHook(() => useResumoPedido(mockItensList));
+    vi.useFakeTimers();
+    (pedidoService.criar as Mock).mockResolvedValue({});
+
+    const { result } = renderHook(() => useResumoPedido("feira-1", "part-1"));
 
     await act(async () => {
       await result.current.finalizarPedido();
@@ -71,11 +103,11 @@ describe("useResumoPedido", () => {
 
     expect(result.current.pedidoRealizado).toBe(true);
 
-    // Avança timers para o setTimeout de redirecionamento
     act(() => {
       vi.advanceTimersByTime(3000);
     });
 
-    expect(mockPush).toHaveBeenCalledWith("/dashboard");
+    expect(mockPush).toHaveBeenCalledWith("/pedidos");
+    vi.useRealTimers();
   });
 });

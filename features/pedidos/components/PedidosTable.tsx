@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Eye } from "lucide-react";
 import { type PedidoDTO } from "@/features/pedidos/api/types";
 import { formatarData, formatarHora, formatarMoeda } from "@/utils/formatters";
-import { getStatusColor } from "@/utils/status";
+import { getStatusColor, getStatusLabel } from "@/utils/status";
 
 interface PedidosTableProps {
   pedidos: PedidoDTO[];
@@ -51,11 +51,11 @@ export function PedidosTable({ pedidos }: Readonly<PedidosTableProps>) {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-[#5BC48B] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">
-                      {getInitials(pedido.clienteNome)}
+                      {getInitials(pedido.consumidorNome)}
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-[#1A3D1F] truncate">
-                        {pedido.clienteNome}
+                        {pedido.consumidorNome}
                       </p>
                       <p className="text-[0.65rem] text-[#8AAA8D] font-mono">
                         ID: #{pedido.id.slice(-6).toUpperCase()}
@@ -67,11 +67,11 @@ export function PedidosTable({ pedidos }: Readonly<PedidosTableProps>) {
                 {/* Data */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <p className="text-sm text-[#1A3D1F] font-medium">
-                    {formatarData(pedido.feiraData)}
+                    {formatarData(pedido.criadoEm)}
                   </p>
                   <p className="text-[0.7rem] text-[#8AAA8D] flex items-center gap-1">
                     <span className="opacity-70">🕐</span>{" "}
-                    {formatarHora(pedido.feiraData)}
+                    {formatarHora(pedido.criadoEm)}
                   </p>
                 </td>
 
@@ -80,7 +80,7 @@ export function PedidosTable({ pedidos }: Readonly<PedidosTableProps>) {
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase border ${colors.bg} ${colors.border} ${colors.text}`}
                   >
-                    {pedido.status}
+                    {getStatusLabel(pedido.status)}
                   </span>
                 </td>
 

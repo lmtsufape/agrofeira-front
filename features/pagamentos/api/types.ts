@@ -1,34 +1,70 @@
-import { ComercianteDTO } from "@/features/comerciantes/api/types";
-
 export interface RelatorioDTO {
   id: string;
-  mes: string;
-  ano: number;
   titulo: string;
-  valor: number;
-  status: string;
+  tipo: string;
+  conteudo: string | null;
+  criadoEm: string;
 }
 
-export interface RepasseComercianteDTO {
+export interface UsuarioResumoDTO {
   id: string;
-  comercianteId: string;
-  commercianteName: string;
-  valor: number;
-  mes: number;
-  ano: number;
-  status: "PENDENTE" | "PAGO";
+  nome: string;
+  email: string | null;
+  telefone: string | null;
 }
 
 export interface RepasseDTO {
   id: string;
-  comercianteId: string;
-  valor: number;
-  mes: number;
-  ano: number;
-  status: "PENDENTE" | "PAGO";
+  rateioResultadoId: string;
+  comerciante: UsuarioResumoDTO;
+  feiraId: string;
+  produtoNome: string;
+  produtoUnidade: string;
+  quantidadeVendida: number;
+  valorBruto: number;
+  valorLiquido: number;
+  status: string;
+  repassadoEm: string | null;
+  criadoEm: string;
 }
 
 export interface PagamentoDetalhesDTO {
-  comerciante: ComercianteDTO;
   repasse: RepasseDTO;
+}
+
+export interface FaturamentoMensalDTO {
+  ano: number;
+  mes: number;
+  mesLabel: string;
+  totalBruto: number;
+  totalLiquido: number;
+  quantidadeRepasses: number;
+}
+
+export interface FeiraDTO {
+  id: string;
+  dataHora: string;
+  status: string;
+  ativa: boolean;
+}
+
+export interface FeiraDetalhesDTO {
+  id: string;
+  dataHora: string;
+  status: string;
+  totalPedidos: number;
+  totalComerciantes: number;
+  totalProdutos: number;
+  valorTotalPedidos: number;
+  valorTotalProdutos: number;
+  totalTaxasEntrega: number;
+  pedidosPorStatus: Record<string, number>;
+  totalRateado: number;
+}
+
+export interface RepasseTotaisDTO {
+  comerciante: UsuarioResumoDTO;
+  totalBruto: number;
+  totalLiquido: number;
+  quantidadeRepasses: number;
 }

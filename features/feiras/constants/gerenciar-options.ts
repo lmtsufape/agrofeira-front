@@ -1,4 +1,10 @@
-import { Package, ShoppingCart, FileText, BarChart2 } from "lucide-react";
+import {
+  Package,
+  ShoppingCart,
+  FileText,
+  BarChart2,
+  Warehouse,
+} from "lucide-react";
 import { type ElementType } from "react";
 
 export interface ActionOption {
@@ -17,6 +23,15 @@ export const FEIRA_GERENCIAR_OPTIONS: ActionOption[] = [
     icon: Package,
     description: "Adicione produtos à feira selecionada",
     accent: "#003d04",
+    href: "/itens/cadastrar",
+  },
+  {
+    label: "Estoque",
+    sublabel: "Bancas",
+    icon: Warehouse,
+    description: "Registre o estoque de cada comerciante",
+    accent: "#0a5c14",
+    href: "/feiras/estoque",
   },
   {
     label: "Cadastrar",
@@ -24,6 +39,7 @@ export const FEIRA_GERENCIAR_OPTIONS: ActionOption[] = [
     icon: ShoppingCart,
     description: "Registre novos pedidos da feira",
     accent: "#1b6112",
+    href: "/pedidos/cadastrar",
   },
   {
     label: "Visualizar",
@@ -39,5 +55,6 @@ export const FEIRA_GERENCIAR_OPTIONS: ActionOption[] = [
     icon: BarChart2,
     description: "Acompanhe receitas e despesas",
     accent: "#3d9428",
+    href: "/feiras/detalhamento/visao-geral",
   },
 ];

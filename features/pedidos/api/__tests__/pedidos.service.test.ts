@@ -12,17 +12,21 @@ describe("pedidoService", () => {
 
   const mockPedido: Partial<PedidoDTO> = {
     id: "p1",
-    clienteNome: "João Silva",
+    consumidorNome: "João Silva",
     valorTotal: 100,
   };
 
-  it("listar deve chamar o endpoint /api/pedidos", async () => {
-    (apiClient as Mock).mockResolvedValue([mockPedido]);
+  const mockPage = { content: [mockPedido], totalElements: 1, totalPages: 1 };
 
-    const result = await pedidoService.listar();
+  it("listar deve chamar o endpoint /api/v1/pedidos com paginação", async () => {
+    (apiClient as Mock).mockResolvedValue(mockPage);
 
-    expect(apiClient).toHaveBeenCalledWith("/api/pedidos");
-    expect(result).toEqual([mockPedido]);
+    const result = await pedidoService.listar(0, 10);
+
+    expect(apiClient).toHaveBeenCalledWith(
+      "/api/v1/pedidos?page=0&size=10&sort=criadoEm,desc",
+    );
+    expect(result).toEqual(mockPage);
   });
 
   it("buscarPorId deve chamar o endpoint com o ID correto", async () => {
@@ -30,16 +34,16 @@ describe("pedidoService", () => {
 
     const result = await pedidoService.buscarPorId("123");
 
-    expect(apiClient).toHaveBeenCalledWith("/api/pedidos/123");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/pedidos/123");
     expect(result).toEqual(mockPedido);
   });
 
-  it("listarPorFeira deve chamar o endpoint com query param feiraId", async () => {
+  it("listarPorFeira deve chamar o endpoint da feira", async () => {
     (apiClient as Mock).mockResolvedValue([mockPedido]);
 
     const result = await pedidoService.listarPorFeira("feira-abc");
 
-    expect(apiClient).toHaveBeenCalledWith("/api/pedidos?feiraId=feira-abc");
+    expect(apiClient).toHaveBeenCalledWith("/api/v1/pedidos/feira/feira-abc");
     expect(result).toEqual([mockPedido]);
   });
 

@@ -40,16 +40,17 @@ describe("DetalhePedidoPage", () => {
   it("deve renderizar os detalhes do pedido em caso de sucesso", () => {
     const mockPedido = {
       id: mockId,
-      clienteNome: "João Silva",
-      feiraData: "2024-12-25T10:00:00Z",
-      status: "Concluído",
+      consumidorNome: "João Silva",
+      criadoEm: "2024-12-25T10:00:00Z",
+      status: "ENTREGUE",
       valorTotal: 150.5,
       itens: [
         {
-          id: "1",
-          itemNome: "Cenoura",
+          produtoId: "prod-1",
+          nomeItem: "Cenoura",
+          unidadeMedida: "kg",
           quantidade: 2,
-          precoUnitario: 5.0,
+          valorUnitario: 5.0,
           valorTotal: 10.0,
         },
       ],
@@ -60,12 +61,17 @@ describe("DetalhePedidoPage", () => {
       loading: false,
       erro: null,
       handlePrint: vi.fn(),
+      handleVoltar: vi.fn(),
+      proximosStatus: [],
+      handleAtualizarStatus: vi.fn(),
+      atualizandoStatus: false,
+      erroStatus: null,
     });
 
     render(<DetalhePedidoPage />);
 
     expect(screen.getByText("João Silva")).toBeInTheDocument();
-    expect(screen.getByText(/Nome do Cliente/i)).toBeInTheDocument();
+    expect(screen.getByText(/Nome do Consumidor/i)).toBeInTheDocument();
     expect(screen.getByText(/Data do Pedido/i)).toBeInTheDocument();
     expect(screen.getByText("Cenoura")).toBeInTheDocument();
   });

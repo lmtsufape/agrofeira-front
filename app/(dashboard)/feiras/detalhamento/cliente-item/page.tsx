@@ -2,9 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { CalendarDays, User as UserIcon, Users, Loader2 } from "lucide-react";
-import { formatarData } from "@/utils/formatters";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useDetalhamentoCliente } from "@/features/feiras/hooks/useDetalhamentoCliente";
 import { ClienteDropdown } from "@/features/feiras/components/ClienteDropdown";
@@ -16,17 +14,17 @@ import {
 
 function DetalhamentoClienteItemContent() {
   const searchParams = useSearchParams();
-  const { token } = useAuth();
   const feiraId = searchParams.get("feiraId");
 
-  const { clientes, selected, setSelected, feiraData, loading, erro } =
-    useDetalhamentoCliente(token, feiraId);
+  const { clientes, selected, setSelected, loading, erro } =
+    useDetalhamentoCliente(feiraId);
 
   return (
     <main className="flex-1 px-4 md:px-6 py-6 max-w-5xl w-full mx-auto flex flex-col gap-6">
       <PageHeader
         title="Cliente → Item"
         subtitle="Veja os itens pedidos por cada cliente da feira"
+        backHref={`/feiras/detalhamento${feiraId ? `?feiraId=${feiraId}` : ""}`}
       />
 
       {erro && (
@@ -47,7 +45,7 @@ function DetalhamentoClienteItemContent() {
               Feira Selecionada
             </p>
             <p className="text-[#1a3d1f] font-bold text-[0.95rem] truncate">
-              {feiraData ? formatarData(feiraData) : (feiraId ?? "—")}
+              {feiraId ?? "—"}
             </p>
           </div>
           {loading && (

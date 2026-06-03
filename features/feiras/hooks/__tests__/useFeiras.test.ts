@@ -7,26 +7,40 @@ import { type FeiraDTO } from "@/features/feiras/api/types";
 
 vi.mock("@/features/feiras/api/feiras.service");
 vi.mock("@/features/auth/contexts/AuthContext");
+vi.mock("swr", () => ({
+  default: vi.fn(),
+}));
 
 describe("useFeiras", () => {
   const mockFeiras: FeiraDTO[] = [
     {
       id: "1",
       dataHora: "2024-01-01T10:00:00Z",
-      status: "ABERTA_PEDIDOS",
-      comerciantes: [],
-      itens: [],
+      status: "ABERTA",
+      ativa: true,
     },
   ];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-  });
-
-  it("deve carregar feiras com sucesso", async () => {
-    (useAuth as Mock).mockReturnValue({ token: "valid-token" });
+    (useAuth as Mock).mockReturnValue({ isAuthenticated: true });
     (feiraService.getAll as Mock).mockResolvedValue({ content: mockFeiras });
 
+    const swr = await import("swr");
+    (swr.default as Mock).mockImplementation(
+      (_key: unknown, fetcher: unknown) => {
+        if (!_key || !fetcher)
+          return { data: undefined, error: undefined, isLoading: true };
+        return {
+          data: { content: mockFeiras },
+          error: undefined,
+          isLoading: false,
+        };
+      },
+    );
+  });
+
+  it("deve expor feiras quando autenticado", async () => {
     const { result } = renderHook(() => useFeiras());
 
     await act(async () => {
@@ -35,18 +49,13 @@ describe("useFeiras", () => {
 
     expect(result.current.feiras).toEqual(mockFeiras);
     expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   it("deve gerenciar a seleção de uma feira", async () => {
-    (useAuth as Mock).mockReturnValue({ token: "valid-token" });
-    (feiraService.getAll as Mock).mockResolvedValue({ content: mockFeiras });
-
     const { result } = renderHook(() => useFeiras());
-    await act(async () => {
-      await Promise.resolve();
-    });
 
-    act(() => {
+    await act(async () => {
       result.current.setSelected(mockFeiras[0]);
     });
 
@@ -54,15 +63,15 @@ describe("useFeiras", () => {
     expect(result.current.isFeiraSelected).toBe(true);
   });
 
-  it("deve carregar mocks locais se o token for mock-token-dev", async () => {
-    (useAuth as Mock).mockReturnValue({ token: "mock-token-dev" });
+  it("não deve buscar feiras quando não autenticado", async () => {
+    (useAuth as Mock).mockReturnValue({ isAuthenticated: false });
 
-    const { result } = renderHook(() => useFeiras());
-    await act(async () => {
-      await Promise.resolve();
+    const swr = await import("swr");
+    (swr.default as Mock).mockImplementation((key: unknown) => {
+      expect(key).toBeNull();
+      return { data: undefined, error: undefined, isLoading: true };
     });
 
-    expect(result.current.feiras.length).toBeGreaterThan(0);
-    expect(feiraService.getAll).not.toHaveBeenCalled();
+    renderHook(() => useFeiras());
   });
 });

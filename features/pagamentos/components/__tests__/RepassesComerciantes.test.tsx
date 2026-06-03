@@ -19,21 +19,41 @@ describe("RepassesComerciantes", () => {
   const mockRepasses = [
     {
       id: "1",
-      comercianteId: "c1",
-      commercianteName: "Comerciante A",
-      valor: 1500.0,
+      rateioResultadoId: "r1",
+      comerciante: {
+        id: "c1",
+        nome: "Comerciante A",
+        email: null,
+        telefone: null,
+      },
+      feiraId: "f1",
+      produtoNome: "Produto A",
+      produtoUnidade: "kg",
+      quantidadeVendida: 10,
+      valorBruto: 1500.0,
+      valorLiquido: 1350.0,
       status: "PENDENTE",
-      mes: 4,
-      ano: 2026,
+      repassadoEm: null,
+      criadoEm: "2026-04-01",
     },
     {
       id: "2",
-      comercianteId: "c2",
-      commercianteName: "Comerciante B",
-      valor: 2500.0,
+      rateioResultadoId: "r2",
+      comerciante: {
+        id: "c2",
+        nome: "Comerciante B",
+        email: null,
+        telefone: null,
+      },
+      feiraId: "f1",
+      produtoNome: "Produto B",
+      produtoUnidade: "unidade",
+      quantidadeVendida: 5,
+      valorBruto: 2500.0,
+      valorLiquido: 2250.0,
       status: "PAGO",
-      mes: 4,
-      ano: 2026,
+      repassadoEm: "2026-04-15",
+      criadoEm: "2026-04-01",
     },
   ];
 
@@ -121,7 +141,7 @@ describe("RepassesComerciantes", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Mostrando 8 de 2 comerciantes/i),
+        screen.getByText(/Mostrando 2 de 2 comerciantes/i),
       ).toBeInTheDocument();
     });
   });

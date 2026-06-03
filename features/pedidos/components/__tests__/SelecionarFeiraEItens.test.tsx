@@ -55,7 +55,7 @@ describe("SelecionarFeiraEItens Component", () => {
     render(<SelecionarFeiraEItens />);
     // Usamos um matcher flexível para a data pois toLocaleDateString depende do timezone
     expect(screen.getByText(/2026/)).toBeInTheDocument();
-    expect(screen.getByText("Garanhuns")).toBeInTheDocument();
+    expect(screen.getByText("ABERTA")).toBeInTheDocument();
   });
 
   it("deve selecionar uma feira ao clicar nela", () => {

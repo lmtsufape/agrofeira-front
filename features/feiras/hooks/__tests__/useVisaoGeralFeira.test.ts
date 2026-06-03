@@ -6,40 +6,60 @@ import { feiraService } from "@/features/feiras/api/feiras.service";
 vi.mock("@/features/feiras/api/feiras.service");
 
 describe("useVisaoGeralFeira", () => {
-  const mockResumo = {
-    feiraId: "1",
-    items: [],
-    comerciantes: [],
-    clientes: [],
+  const mockDetalhes = {
+    id: "1",
+    dataHora: "2025-05-01T08:00:00",
+    status: "FINALIZADA",
+    totalPedidos: 10,
+    totalComerciantes: 3,
+    totalProdutos: 5,
+    valorTotalPedidos: 500,
+    valorTotalProdutos: 400,
+    totalTaxasEntrega: 70,
+    pedidosPorStatus: { ENTREGUE: 8, CANCELADO: 2 },
+    totalRateado: 400,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("deve carregar resumo com sucesso", async () => {
-    (feiraService.getResumo as Mock).mockResolvedValue(mockResumo);
+  it("deve carregar detalhes com sucesso", async () => {
+    (feiraService.getDetalhes as Mock).mockResolvedValue(mockDetalhes);
 
-    const { result } = renderHook(() => useVisaoGeralFeira("token", "123"));
+    const { result } = renderHook(() => useVisaoGeralFeira("1"));
 
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(result.current.resumo).toEqual(mockResumo);
+    expect(result.current.detalhes).toEqual(mockDetalhes);
     expect(result.current.loading).toBe(false);
   });
 
-  it("deve tratar erro carregando mock local de fallback", async () => {
-    (feiraService.getResumo as Mock).mockRejectedValue(new Error("Fail"));
+  it("deve tratar erro ao carregar detalhes", async () => {
+    (feiraService.getDetalhes as Mock).mockRejectedValue(new Error("Fail"));
 
-    const { result } = renderHook(() => useVisaoGeralFeira("token", "123"));
+    const { result } = renderHook(() => useVisaoGeralFeira("1"));
 
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(result.current.resumo).toBeDefined(); // Fallback MOCK_RESUMO
-    expect(result.current.erro).toContain("Não foi possível carregar o resumo");
+    expect(result.current.detalhes).toBeNull();
+    expect(result.current.erro).toContain(
+      "Não foi possível carregar os detalhes",
+    );
+  });
+
+  it("não deve buscar sem feiraId", async () => {
+    const { result } = renderHook(() => useVisaoGeralFeira(null));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(feiraService.getDetalhes).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
   });
 });
