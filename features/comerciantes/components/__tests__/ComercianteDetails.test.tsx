@@ -156,6 +156,52 @@ describe("ComercianteDetails Component", () => {
     expect(screen.getByText("Nenhum item removido.")).toBeInTheDocument();
   });
 
+  it("deve alternar a seleção de categorias inativas", () => {
+    (useComerciante as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      comerciante: { id: mockId, nome: "João" },
+      allCategories: [{ id: "c1", nome: "Hortaliças" }],
+      activeCategories: [],
+    });
+
+    render(<ComercianteDetails comercianteId={mockId} />);
+
+    const checkbox = screen.getByRole("checkbox");
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+
+    fireEvent.click(checkbox);
+    expect(checkbox).not.toBeChecked();
+  });
+
+  it("deve permitir adicionar categorias selecionadas", () => {
+    (useComerciante as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      comerciante: { id: mockId, nome: "João" },
+      allCategories: [
+        { id: "c1", nome: "Hortaliças" },
+        { id: "c2", nome: "Frutas" },
+      ],
+      activeCategories: ["c2"],
+    });
+
+    render(<ComercianteDetails comercianteId={mockId} />);
+
+    // Seleciona Hortaliças (que está inativa)
+    const checkbox = screen.getAllByRole("checkbox")[0];
+    fireEvent.click(checkbox);
+
+    // Clica no botão de adicionar (ChevronRight no desktop)
+    const addBtn = screen.getByTitle("Adicionar selecionados");
+    fireEvent.click(addBtn);
+
+    // Verifica se agora Hortaliças aparece na lista de ativos
+    // Ativos têm fundo #f0f5f0 no item ou estão na seção da direita
+    expect(screen.getByText("Hortaliças").closest("div")).toHaveClass(
+      "hover:bg-[#f0f5f0]",
+    );
+  });
+
   it("deve disparar alert em caso de falha no salvamento", async () => {
     const alertMock = vi.spyOn(window, "alert").mockImplementation(() => {});
     mockSaveChanges.mockRejectedValue(new Error("Erro interno"));

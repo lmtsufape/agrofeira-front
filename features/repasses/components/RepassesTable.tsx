@@ -115,7 +115,12 @@ export function RepassesTable({ repasses }: Readonly<RepassesTableProps>) {
                 <tr
                   key={key}
                   onClick={() => setSelected(group)}
-                  className="hover:bg-[#5bc48b08] transition-colors cursor-pointer"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setSelected(group);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className="hover:bg-[#5bc48b08] transition-colors cursor-pointer outline-none focus:bg-[#5bc48b0a]"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -191,11 +196,22 @@ function RepasseModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.target === e.currentTarget) onClose();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Fechar ao clicar fora"
     >
       <div
         className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#EEF5EE]">

@@ -330,13 +330,22 @@ export function ItensList() {
       {isEditModalOpen && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={handleCloseEditModal}
-          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseEditModal();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              if (e.target === e.currentTarget) handleCloseEditModal();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Fechar ao clicar fora"
         >
           <div
             className="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
             role="dialog"
+            aria-modal="true"
             aria-labelledby="modal-title"
           >
             {/* Header com botão de fechar */}

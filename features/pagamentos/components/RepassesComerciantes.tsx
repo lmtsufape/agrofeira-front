@@ -198,7 +198,13 @@ export function RepassesComerciantes() {
                   <div
                     key={group.comerciante.id}
                     onClick={() => setSelected(group)}
-                    className="px-3 sm:px-4 lg:px-8 py-3 sm:py-4 grid grid-cols-1 md:grid-cols-12 md:items-center gap-2 sm:gap-3 md:gap-0 cursor-pointer transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        setSelected(group);
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="px-3 sm:px-4 lg:px-8 py-3 sm:py-4 grid grid-cols-1 md:grid-cols-12 md:items-center gap-2 sm:gap-3 md:gap-0 cursor-pointer transition-colors outline-none focus:bg-[#5bc48b0a]"
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.background =
                         "rgba(91, 196, 139, 0.05)")
@@ -258,12 +264,10 @@ export function RepassesComerciantes() {
                     </div>
 
                     {/* Ação */}
-                    <div
-                      className="md:col-span-2 md:text-center flex justify-end md:justify-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="md:col-span-2 md:text-center flex justify-end md:justify-center">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (isPendente) {
                             router.push(
                               `/pagamentos/repasses/${group.comerciante.id}`,
@@ -362,11 +366,22 @@ function ProdutosModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.target === e.currentTarget) onClose();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Fechar ao clicar fora"
     >
       <div
         className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#EEF5EE]">

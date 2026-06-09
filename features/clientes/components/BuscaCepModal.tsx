@@ -67,12 +67,20 @@ export function BuscaCepModal({
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
-      onClick={onClose}
-      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.target === e.currentTarget) onClose();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Fechar ao clicar fora"
     >
       <div
         className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-cep-title"

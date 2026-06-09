@@ -8,6 +8,7 @@ import { FormSection } from "@/components/ui/FormSection";
 import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { comercianteService } from "@/features/comerciantes/api/comerciantes.service";
 import { mascararTelefone } from "@/utils/formatters";
+import { generateSecurePassword } from "@/utils/crypto";
 
 export function ComercianteForm() {
   const {
@@ -32,9 +33,7 @@ export function ComercianteForm() {
     },
     onSubmit: async (data) => {
       // Gera uma senha aleatória pois o backend exige mas o usuário não terá acesso
-      const generatedPassword =
-        Math.random().toString(36).slice(-10) +
-        Math.random().toString(36).slice(-10);
+      const generatedPassword = generateSecurePassword();
 
       const telefoneLimpo = (data.phone as string)?.replace(/\D/g, "");
 

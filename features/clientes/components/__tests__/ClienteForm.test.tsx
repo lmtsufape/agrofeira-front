@@ -32,6 +32,7 @@ describe("ClienteForm Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn());
     (useRouter as Mock).mockReturnValue({ push: mockPush, back: mockBack });
     (useZonasEntrega as Mock).mockReturnValue({
       zonas: mockZonas,
@@ -221,5 +222,58 @@ describe("ClienteForm Component", () => {
         }),
       );
     });
+  });
+
+  it("deve buscar endereço ao sair do campo CEP se completo", async () => {
+    (global.fetch as Mock).mockResolvedValue({
+      json: async () => ({
+        logradouro: "Rua Automática",
+        bairro: "Bairro Automático",
+        localidade: "Garanhuns",
+        uf: "PE",
+        erro: false,
+      }),
+    });
+
+    render(<ClienteForm />);
+
+    const cepInput = screen.getByLabelText(/CEP/i);
+    fireEvent.change(cepInput, { target: { value: "55290-000" } });
+    fireEvent.blur(cepInput);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Rua Automática")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Bairro Automático")).toBeInTheDocument();
+    });
+  });
+
+  it("deve abrir modal de busca de CEP e atualizar campos ao selecionar", async () => {
+    (global.fetch as Mock).mockResolvedValue({
+      json: async () => [
+        {
+          cep: "55290-111",
+          logradouro: "Rua do Modal",
+          bairro: "Bairro do Modal",
+          localidade: "Garanhuns",
+          uf: "PE",
+        },
+      ],
+    });
+
+    render(<ClienteForm />);
+
+    fireEvent.click(screen.getByTitle("Não sei meu CEP"));
+
+    const modalInput = screen.getByPlaceholderText(/Ex: Alipio Medeiros/i);
+    fireEvent.change(modalInput, { target: { value: "Rua do Modal" } });
+    fireEvent.click(screen.getByRole("button", { name: "" })); // Botão lupa no modal
+
+    await waitFor(() => {
+      const result = screen.getByText("55290-111");
+      fireEvent.click(result);
+    });
+
+    expect(screen.getByDisplayValue("55290-111")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Rua do Modal")).toBeInTheDocument();
   });
 });

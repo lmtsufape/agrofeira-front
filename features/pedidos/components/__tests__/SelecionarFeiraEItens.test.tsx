@@ -88,6 +88,22 @@ describe("SelecionarFeiraEItens Component", () => {
     expect(screen.getByText("Tomate")).toBeInTheDocument();
   });
 
+  it("deve permitir trocar de feira", () => {
+    const mockSetSelected = vi.fn();
+    (useSelecionarFeiraEItens as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      selectedFeira: { id: "f1", dataHora: "2026-04-15", local: "Garanhuns" },
+      setSelectedFeira: mockSetSelected,
+    });
+
+    render(<SelecionarFeiraEItens />);
+
+    const changeBtn = screen.getByText("Trocar Feira");
+    fireEvent.click(changeBtn);
+
+    expect(mockSetSelected).toHaveBeenCalledWith(null);
+  });
+
   it("deve chamar handleQuantidadeChange ao alterar quantidade", () => {
     const mockChangeQty = vi.fn();
     (useSelecionarFeiraEItens as Mock).mockReturnValue({

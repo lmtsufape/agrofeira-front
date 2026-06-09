@@ -14,6 +14,8 @@ vi.mock("../../api/pagamentos.service", () => ({
     relatorioMensal: vi.fn().mockResolvedValue([]),
     relatorioGeralPorComerciante: vi.fn().mockResolvedValue([]),
     listarFeiras: vi.fn().mockResolvedValue([]),
+    detalhesFeira: vi.fn(),
+    totaisRepassesPorFeira: vi.fn(),
   },
 }));
 
@@ -109,5 +111,53 @@ describe("RelatoriosFinanceiros", () => {
     const backBtn = screen.getAllByRole("button")[0];
     fireEvent.click(backBtn);
     expect(mockPush).toHaveBeenCalledWith("/pagamentos");
+  });
+
+  it("deve alterar o ano ao clicar nos botões de navegação", async () => {
+    render(<RelatoriosFinanceiros />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2026")).toBeInTheDocument();
+    });
+
+    // Actually simpler to find by looking at buttons that aren't "Atualizar" or "Voltar"
+    const buttons = screen.getAllByRole("button");
+    const prevBtn = buttons[2]; // Index 0: Back, 1: Refresh, 2: PrevYear
+
+    fireEvent.click(prevBtn);
+
+    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(pagamentosService.relatorioMensal).toHaveBeenCalledWith(2025);
+  });
+
+  it("deve carregar detalhes quando uma feira é selecionada", async () => {
+    const mockFeiras = [
+      { id: "f1", dataHora: "2026-04-15T12:00:00Z", status: "ENCERRADA" },
+    ];
+    (pagamentosService.listarFeiras as Mock).mockResolvedValue(mockFeiras);
+    (pagamentosService.detalhesFeira as Mock).mockResolvedValue({
+      totalPedidos: 5,
+      valorTotalPedidos: 100,
+      totalRateado: 80,
+      totalTaxasEntrega: 20,
+      totalComerciantes: 2,
+      pedidosPorStatus: {},
+    });
+    (pagamentosService.totaisRepassesPorFeira as Mock).mockResolvedValue([]);
+
+    render(<RelatoriosFinanceiros />);
+
+    const select = await screen.findByRole("combobox");
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("option").length).toBeGreaterThan(1);
+    });
+
+    fireEvent.change(select, { target: { value: "f1" } });
+
+    await waitFor(() => {
+      expect(pagamentosService.detalhesFeira).toHaveBeenCalledWith("f1");
+      expect(screen.getByText("5")).toBeInTheDocument(); // totalPedidos
+    });
   });
 });

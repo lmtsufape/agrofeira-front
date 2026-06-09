@@ -108,4 +108,56 @@ describe("ItensList Component", () => {
       expect(mockMutate).toHaveBeenCalled();
     });
   });
+
+  it("deve chamar deleteItem ao clicar em Excluir no modal", async () => {
+    const mockItens = [
+      {
+        id: "1",
+        nome: "Tomate",
+        precoBase: 5.0,
+        categoria: "FRUTAS",
+        unidadeMedida: "KG",
+      },
+    ];
+    (useItens as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      itens: mockItens,
+    });
+    (itemService.delete as Mock).mockResolvedValue({});
+
+    render(<ItensList />);
+
+    fireEvent.click(screen.getByText("Editar"));
+    fireEvent.click(screen.getByText("Excluir Item"));
+
+    expect(window.confirm).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(itemService.delete).toHaveBeenCalledWith("1");
+      expect(mockMutate).toHaveBeenCalled();
+    });
+  });
+
+  it("deve formatar o preço no modal de edição", () => {
+    const mockItens = [
+      {
+        id: "1",
+        nome: "Tomate",
+        precoBase: 5.0,
+        categoria: "FRUTAS",
+        unidadeMedida: "KG",
+      },
+    ];
+    (useItens as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      itens: mockItens,
+    });
+
+    render(<ItensList />);
+
+    fireEvent.click(screen.getByText("Editar"));
+    const priceInput = screen.getByLabelText(/Preço Base/i) as HTMLInputElement;
+
+    fireEvent.change(priceInput, { target: { value: "1050" } });
+    expect(priceInput.value).toBe("10,50");
+  });
 });
