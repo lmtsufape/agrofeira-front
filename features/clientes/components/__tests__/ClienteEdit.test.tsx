@@ -25,6 +25,7 @@ describe("ClienteEdit Component", () => {
   const mockBack = vi.fn();
   const mockHandleFormChange = vi.fn();
   const mockSaveChanges = vi.fn();
+  const mockSetFormData = vi.fn();
 
   const defaultHookReturn = {
     cliente: null,
@@ -42,6 +43,7 @@ describe("ClienteEdit Component", () => {
       estado: "PE",
       zonaEntregaId: "z1",
     },
+    setFormData: mockSetFormData,
     loading: false,
     error: null,
     savingChanges: false,
@@ -51,6 +53,8 @@ describe("ClienteEdit Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("alert", vi.fn());
     (useRouter as Mock).mockReturnValue({ back: mockBack, push: vi.fn() });
     (useZonasEntrega as Mock).mockReturnValue({
       zonas: [{ id: "z1", nome: "Centro", taxa: 5.0 }],
@@ -168,6 +172,96 @@ describe("ClienteEdit Component", () => {
     fireEvent.click(confirmButton);
 
     expect(mockSaveChanges).toHaveBeenCalled();
+  });
+
+  it("deve validar cidade como Garanhuns ao salvar", async () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João" },
+      formData: { ...defaultHookReturn.formData, cidade: "Recife" },
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    fireEvent.click(screen.getByText("Confirmar"));
+
+    expect(window.alert).toHaveBeenCalledWith(
+      "Apenas clientes de Garanhuns podem ser cadastrados no sistema.",
+    );
+    expect(mockSaveChanges).not.toHaveBeenCalled();
+  });
+
+  it("deve exigir zona de entrega ao salvar", async () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João" },
+      formData: { ...defaultHookReturn.formData, zonaEntregaId: "" },
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    fireEvent.click(screen.getByText("Confirmar"));
+
+    expect(window.alert).toHaveBeenCalledWith(
+      "A zona de entrega é obrigatória!",
+    );
+    expect(mockSaveChanges).not.toHaveBeenCalled();
+  });
+
+  it("deve aplicar máscara no CEP ao digitar", () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João" },
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    const cepInput = screen.getByLabelText(/CEP/i);
+    fireEvent.change(cepInput, { target: { value: "55290000" } });
+
+    expect(mockHandleFormChange).toHaveBeenCalledWith("cep", "55290-000");
+  });
+
+  it("deve buscar endereço ao sair do campo CEP se completo", async () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João" },
+    });
+
+    (global.fetch as Mock).mockResolvedValue({
+      json: async () => ({
+        logradouro: "Rua Teste",
+        bairro: "Centro",
+        localidade: "Garanhuns",
+        uf: "PE",
+        erro: false,
+      }),
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    const cepInput = screen.getByLabelText(/CEP/i);
+    fireEvent.blur(cepInput, { target: { value: "55290-000" } });
+
+    await waitFor(() => {
+      expect(mockSetFormData).toHaveBeenCalled();
+    });
+  });
+
+  it("deve abrir modal de busca de CEP al clicar na lupa", () => {
+    (useCliente as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      cliente: { id: mockId, nome: "João" },
+    });
+
+    render(<ClienteEdit clienteId={mockId} />);
+
+    // O botão com a lupa é o segundo ou terceiro dependendo do layout
+    // No código: <button ... title="Não sei meu CEP">
+    const searchButton = screen.getByTitle("Não sei meu CEP");
+    fireEvent.click(searchButton);
+
+    expect(screen.getByText(/Buscar CEP em Garanhuns/i)).toBeInTheDocument();
   });
 
   it("deve exibir 'Salvando...' e desabilitar botões durante a submissão", () => {

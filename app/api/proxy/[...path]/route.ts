@@ -46,7 +46,7 @@ async function handleRequest(request: NextRequest) {
       cache: "no-store",
     });
 
-    const data = await response.blob();
+    const data = await response.arrayBuffer();
 
     return new NextResponse(data, {
       status: response.status,

@@ -63,6 +63,44 @@ describe("useFeiras", () => {
     expect(result.current.isFeiraSelected).toBe(true);
   });
 
+  it("deve atualizar o status da feira com sucesso", async () => {
+    const mockAtualizada = { ...mockFeiras[0], status: "ABERTA" };
+    (feiraService.atualizarStatus as Mock).mockResolvedValue(mockAtualizada);
+
+    const { result } = renderHook(() => useFeiras());
+
+    await act(async () => {
+      result.current.setSelected(mockFeiras[0]);
+    });
+
+    await act(async () => {
+      await result.current.handleAtualizarStatus("ABERTA");
+    });
+
+    expect(feiraService.atualizarStatus).toHaveBeenCalledWith("1", "ABERTA");
+    expect(result.current.selected?.status).toBe("ABERTA");
+    expect(result.current.atualizandoStatus).toBe(false);
+  });
+
+  it("deve tratar erro ao atualizar status", async () => {
+    (feiraService.atualizarStatus as Mock).mockRejectedValue(new Error("Erro"));
+
+    const { result } = renderHook(() => useFeiras());
+
+    await act(async () => {
+      result.current.setSelected(mockFeiras[0]);
+    });
+
+    await act(async () => {
+      await result.current.handleAtualizarStatus("ABERTA");
+    });
+
+    expect(result.current.erroStatus).toBe(
+      "Não foi possível atualizar o status da feira.",
+    );
+    expect(result.current.atualizandoStatus).toBe(false);
+  });
+
   it("não deve buscar feiras quando não autenticado", async () => {
     (useAuth as Mock).mockReturnValue({ isAuthenticated: false });
 

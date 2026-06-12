@@ -122,4 +122,74 @@ describe("ResumoPedido Component", () => {
     expect(screen.getByText("Rua A, 123")).toBeInTheDocument();
     expect(screen.getByText("Garanhuns, PE")).toBeInTheDocument();
   });
+
+  it("deve chamar handleQuantidadeChange ao clicar nos botões + e -", () => {
+    const mockHandleQty = vi.fn();
+    (useResumoPedido as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      itensCarrinho: [
+        {
+          id: "1",
+          nome: "Tomate",
+          quantidade: 1,
+          precoBase: 5.0,
+          unidadeMedida: "Kg",
+        },
+      ],
+      handleQuantidadeChange: mockHandleQty,
+    });
+
+    render(<ResumoPedido />);
+
+    fireEvent.click(screen.getByText("+"));
+    expect(mockHandleQty).toHaveBeenCalledWith("1", 1);
+
+    fireEvent.click(screen.getByText("−"));
+    expect(mockHandleQty).toHaveBeenCalledWith("1", -1);
+  });
+
+  it("deve chamar handleRemover ao clicar no botão Remover", () => {
+    const mockHandleRemover = vi.fn();
+    (useResumoPedido as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      itensCarrinho: [
+        {
+          id: "1",
+          nome: "Tomate",
+          quantidade: 1,
+          precoBase: 5.0,
+          unidadeMedida: "Kg",
+        },
+      ],
+      handleRemover: mockHandleRemover,
+    });
+
+    render(<ResumoPedido />);
+    fireEvent.click(screen.getByText("Remover"));
+    expect(mockHandleRemover).toHaveBeenCalledWith("1");
+  });
+
+  it("deve permitir preencher e confirmar endereço no modal", () => {
+    const mockSetEndereco = vi.fn();
+    const mockSetEnderecoModal = vi.fn();
+    (useResumoPedido as Mock).mockReturnValue({
+      ...defaultHookReturn,
+      enderecoModal: true,
+      setEndereco: mockSetEndereco,
+      setEnderecoModal: mockSetEnderecoModal,
+    });
+
+    render(<ResumoPedido />);
+
+    const ruaInput = screen.getByPlaceholderText(/Ex: Rua Principal/i);
+    fireEvent.change(ruaInput, { target: { value: "Rua Nova" } });
+
+    // O setEndereco é chamado para cada mudança
+    expect(mockSetEndereco).toHaveBeenCalled();
+
+    const confirmBtn = screen.getByText("Confirmar");
+    fireEvent.click(confirmBtn);
+
+    expect(mockSetEnderecoModal).toHaveBeenCalledWith(false);
+  });
 });

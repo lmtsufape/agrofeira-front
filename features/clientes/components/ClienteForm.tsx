@@ -11,6 +11,7 @@ import { useFormSubmit } from "@/hooks/useFormSubmit";
 import { clienteService } from "@/features/clientes/api/clientes.service";
 import { BuscaCepModal, type ViaCepAddress } from "./BuscaCepModal";
 import { mascararTelefone, formatarMoeda } from "@/utils/formatters";
+import { generateSecurePassword } from "@/utils/crypto";
 import { useZonasEntrega } from "../hooks/useZonasEntrega";
 
 const STATE_OPTIONS = [
@@ -85,9 +86,7 @@ export function ClienteForm() {
     },
     onSubmit: async (data) => {
       // Gera uma senha aleatória pois o backend exige mas o usuário não terá acesso
-      const generatedPassword =
-        Math.random().toString(36).slice(-10) +
-        Math.random().toString(36).slice(-10);
+      const generatedPassword = generateSecurePassword();
 
       const cepLimpo = (data.cep as string)?.replace(/\D/g, "");
       const telefoneLimpo = (data.phone as string)?.replace(/\D/g, "");
