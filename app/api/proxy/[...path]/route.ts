@@ -25,7 +25,8 @@ async function handleRequest(request: NextRequest) {
 
   // Remove o prefixo /api/proxy para obter o caminho real da API
   const apiPath = pathname.replace(/^\/api\/proxy/, "");
-  const targetUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${apiPath}${search}`;
+  const targetUrl = `${process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${apiPath}${search}`;
+  //const targetUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${apiPath}${search}`;
 
   const headers = new Headers(request.headers);
 
